@@ -1,6 +1,11 @@
 # AI Ad Generator
 
+
+Created a Java-based AI Ad Generator. 
+Using Spring Boot for the backend and integrating with AI services for text and image generation.
+
 An AI-powered advertisement generator that produces new, on-brand ads from reference ads. This application uses OpenAI's GPT-4 and DALL-E to generate creative advertisements while maintaining brand consistency.
+
 
 ## Features
 
