@@ -1,10 +1,9 @@
 package com.aigenerator.service.impl;
 
-import com.aallam.openai.api.chat.*;
-import com.aallam.openai.api.image.Image;
-import com.aallam.openai.api.image.ImageCreation;
-import com.aallam.openai.api.image.ImageUrl;
-import com.aallam.openai.client.OpenAI;
+import com.theokanning.openai.service.OpenAiService;
+import com.theokanning.openai.completion.CompletionRequest;
+import com.theokanning.openai.image.CreateImageRequest;
+import com.theokanning.openai.image.ImageResult;
 import com.aigenerator.model.Brand;
 import com.aigenerator.model.GeneratedAd;
 import com.aigenerator.model.ReferenceAd;
@@ -18,7 +17,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class OpenAIAdGenerationService implements AdGenerationService {
-    private final OpenAI openAI;
+    private final OpenAiService openAiService;
 
     @Override
     public GeneratedAd generateAd(ReferenceAd referenceAd, Brand brand, String generationPrompt) {
@@ -26,15 +25,15 @@ public class OpenAIAdGenerationService implements AdGenerationService {
         String prompt = buildPrompt(referenceAd, brand, generationPrompt);
         
         // Generate ad copy using GPT
-        ChatCompletion chatCompletion = openAI.chatCompletion(ChatCompletionRequest.builder()
+        CompletionRequest completionRequest = CompletionRequest.builder()
                 .model("gpt-4")
-                .messages(List.of(
-                    new ChatMessage(ChatRole.SYSTEM, "You are an expert advertising copywriter."),
-                    new ChatMessage(ChatRole.USER, prompt)
-                ))
-                .build());
+                .prompt(prompt)
+                .maxTokens(500)
+                .temperature(0.7)
+                .build();
 
-        String generatedText = chatCompletion.choices().get(0).message().content();
+        String generatedText = openAiService.createCompletion(completionRequest)
+                .getChoices().get(0).getText();
         
         // Parse the generated text and create a new ad
         GeneratedAd generatedAd = parseGeneratedText(generatedText);
@@ -46,14 +45,14 @@ public class OpenAIAdGenerationService implements AdGenerationService {
         // Generate image if needed
         if (referenceAd.getImageUrl() != null) {
             String imagePrompt = buildImagePrompt(referenceAd, brand, generatedAd);
-            ImageCreation imageCreation = openAI.imageCreation(ImageCreationRequest.builder()
+            CreateImageRequest imageRequest = CreateImageRequest.builder()
                     .prompt(imagePrompt)
                     .n(1)
                     .size("1024x1024")
-                    .build());
+                    .build();
             
-            Image generatedImage = imageCreation.data().get(0);
-            generatedAd.setImageUrl(generatedImage.url().toString());
+            ImageResult generatedImage = openAiService.createImage(imageRequest);
+            generatedAd.setImageUrl(generatedImage.getData().get(0).getUrl());
         }
         
         return generatedAd;
@@ -72,15 +71,15 @@ public class OpenAIAdGenerationService implements AdGenerationService {
     public GeneratedAd refineAd(GeneratedAd ad, String refinementPrompt) {
         String prompt = buildRefinementPrompt(ad, refinementPrompt);
         
-        ChatCompletion chatCompletion = openAI.chatCompletion(ChatCompletionRequest.builder()
+        CompletionRequest completionRequest = CompletionRequest.builder()
                 .model("gpt-4")
-                .messages(List.of(
-                    new ChatMessage(ChatRole.SYSTEM, "You are an expert advertising copywriter."),
-                    new ChatMessage(ChatRole.USER, prompt)
-                ))
-                .build());
+                .prompt(prompt)
+                .maxTokens(500)
+                .temperature(0.7)
+                .build();
 
-        String refinedText = chatCompletion.choices().get(0).message().content();
+        String refinedText = openAiService.createCompletion(completionRequest)
+                .getChoices().get(0).getText();
         
         // Update the ad with refined content
         updateAdWithRefinedText(ad, refinedText);

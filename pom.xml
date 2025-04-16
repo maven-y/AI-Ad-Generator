@@ -16,7 +16,7 @@
 
     <properties>
         <java.version>17</java.version>
-        <openai.version>3.7.0</openai.version>
+        <openai.version>0.18.2</openai.version>
     </properties>
 
     <dependencies>
@@ -43,8 +43,18 @@
 
         <!-- OpenAI API -->
         <dependency>
-            <groupId>com.aallam.openai</groupId>
-            <artifactId>openai-client</artifactId>
+            <groupId>com.theokanning.openai-gpt3-java</groupId>
+            <artifactId>api</artifactId>
+            <version>${openai.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.theokanning.openai-gpt3-java</groupId>
+            <artifactId>client</artifactId>
+            <version>${openai.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.theokanning.openai-gpt3-java</groupId>
+            <artifactId>service</artifactId>
             <version>${openai.version}</version>
         </dependency>
 

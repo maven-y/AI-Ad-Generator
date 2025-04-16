@@ -1,9 +1,11 @@
 package com.aigenerator.config;
 
-import com.aallam.openai.client.OpenAI;
+import com.theokanning.openai.service.OpenAiService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.time.Duration;
 
 @Configuration
 public class OpenAIConfig {
@@ -12,9 +14,7 @@ public class OpenAIConfig {
     private String apiKey;
 
     @Bean
-    public OpenAI openAI() {
-        return OpenAI.builder()
-                .apiKey(apiKey)
-                .build();
+    public OpenAiService openAiService() {
+        return new OpenAiService(apiKey, Duration.ofSeconds(60));
     }
 } 
