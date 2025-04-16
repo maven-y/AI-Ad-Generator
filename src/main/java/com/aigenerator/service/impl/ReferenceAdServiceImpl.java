@@ -1,5 +1,6 @@
 package com.aigenerator.service.impl;
 
+import com.aigenerator.exception.ResourceNotFoundException;
 import com.aigenerator.model.ReferenceAd;
 import com.aigenerator.repository.ReferenceAdRepository;
 import com.aigenerator.service.ReferenceAdService;
@@ -21,7 +22,7 @@ public class ReferenceAdServiceImpl implements ReferenceAdService {
     @Override
     public ReferenceAd getReferenceAd(Long id) {
         return referenceAdRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reference ad not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Reference ad not found with id: " + id));
     }
 
     @Override

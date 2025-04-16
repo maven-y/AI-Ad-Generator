@@ -1,5 +1,6 @@
 package com.aigenerator.service.impl;
 
+import com.aigenerator.exception.ResourceNotFoundException;
 import com.aigenerator.model.Brand;
 import com.aigenerator.repository.BrandRepository;
 import com.aigenerator.service.BrandService;
@@ -21,7 +22,7 @@ public class BrandServiceImpl implements BrandService {
     @Override
     public Brand getBrand(Long id) {
         return brandRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Brand not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Brand not found with id: " + id));
     }
 
     @Override

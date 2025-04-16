@@ -1,7 +1,8 @@
 package com.aigenerator.service.impl;
 
 import com.theokanning.openai.service.OpenAiService;
-import com.theokanning.openai.completion.CompletionRequest;
+import com.theokanning.openai.completion.chat.ChatCompletionRequest;
+import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.image.CreateImageRequest;
 import com.theokanning.openai.image.ImageResult;
 import com.aigenerator.model.Brand;
@@ -27,15 +28,15 @@ public class OpenAIAdGenerationService implements AdGenerationService {
         String prompt = buildPrompt(referenceAd, brand, generationPrompt);
         
         // Generate ad copy using GPT
-        CompletionRequest completionRequest = CompletionRequest.builder()
-                .model("gpt-4")
-                .prompt(prompt)
+        ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
+                .model("gpt-3.5-turbo")
+                .messages(List.of(new ChatMessage("user", prompt)))
                 .maxTokens(500)
                 .temperature(0.7)
                 .build();
 
-        String generatedText = openAiService.createCompletion(completionRequest)
-                .getChoices().get(0).getText();
+        String generatedText = openAiService.createChatCompletion(chatCompletionRequest)
+                .getChoices().get(0).getMessage().getContent();
         
         // Parse the generated text and create a new ad
         GeneratedAd generatedAd = parseGeneratedText(generatedText);
@@ -73,15 +74,15 @@ public class OpenAIAdGenerationService implements AdGenerationService {
     public GeneratedAd refineAd(GeneratedAd ad, String refinementPrompt) {
         String prompt = buildRefinementPrompt(ad, refinementPrompt);
         
-        CompletionRequest completionRequest = CompletionRequest.builder()
-                .model("gpt-4")
-                .prompt(prompt)
+        ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
+                .model("gpt-3.5-turbo")
+                .messages(List.of(new ChatMessage("user", prompt)))
                 .maxTokens(500)
                 .temperature(0.7)
                 .build();
 
-        String refinedText = openAiService.createCompletion(completionRequest)
-                .getChoices().get(0).getText();
+        String refinedText = openAiService.createChatCompletion(chatCompletionRequest)
+                .getChoices().get(0).getMessage().getContent();
         
         // Update the ad with refined content
         updateAdWithRefinedText(ad, refinedText);
