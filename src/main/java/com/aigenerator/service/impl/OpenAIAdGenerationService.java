@@ -9,6 +9,7 @@ import com.aigenerator.model.GeneratedAd;
 import com.aigenerator.model.ReferenceAd;
 import com.aigenerator.service.AdGenerationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "openai.api.key")
 public class OpenAIAdGenerationService implements AdGenerationService {
     private final OpenAiService openAiService;
 

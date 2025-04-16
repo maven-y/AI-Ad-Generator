@@ -1,0 +1,411 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "AI Ad Generator",
+		"description": "Collection for AI Ad Generator API endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Brands",
+			"description": "Brand management endpoints",
+			"item": [
+				{
+					"name": "Get All Brands",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/brands",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "brands"]
+						},
+						"description": "Retrieve all brands"
+					}
+				},
+				{
+					"name": "Get Brand by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/brands/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "brands", "1"]
+						},
+						"description": "Retrieve a specific brand by ID"
+					}
+				},
+				{
+					"name": "Create Brand",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"TechFlow\",\n    \"description\": \"Innovative tech solutions for modern businesses\",\n    \"brandColors\": [\"Blue\", \"White\"],\n    \"brandFonts\": [\"Roboto\", \"Open Sans\"],\n    \"toneOfVoice\": \"Professional and friendly\",\n    \"targetAudience\": \"Tech-savvy professionals\",\n    \"brandPersonality\": \"Innovative and reliable\",\n    \"styleKeywords\": [\"Modern\", \"Innovative\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/brands",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "brands"]
+						},
+						"description": "Create a new brand"
+					}
+				},
+				{
+					"name": "Update Brand",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"TechFlow Updated\",\n    \"description\": \"Updated description\",\n    \"brandColors\": [\"Blue\", \"White\", \"Gray\"],\n    \"brandFonts\": [\"Roboto\", \"Open Sans\"],\n    \"toneOfVoice\": \"Professional and friendly\",\n    \"targetAudience\": \"Tech-savvy professionals\",\n    \"brandPersonality\": \"Innovative and reliable\",\n    \"styleKeywords\": [\"Modern\", \"Innovative\", \"Tech\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/brands/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "brands", "1"]
+						},
+						"description": "Update an existing brand"
+					}
+				},
+				{
+					"name": "Delete Brand",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/brands/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "brands", "1"]
+						},
+						"description": "Delete a brand"
+					}
+				}
+			]
+		},
+		{
+			"name": "Reference Ads",
+			"description": "Reference ad management endpoints",
+			"item": [
+				{
+					"name": "Get All Reference Ads",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reference-ads",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reference-ads"]
+						},
+						"description": "Retrieve all reference ads"
+					}
+				},
+				{
+					"name": "Get Reference Ad by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reference-ads/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reference-ads", "1"]
+						},
+						"description": "Retrieve a specific reference ad by ID"
+					}
+				},
+				{
+					"name": "Get Reference Ads by Brand",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reference-ads/brand/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reference-ads", "brand", "1"]
+						},
+						"description": "Retrieve reference ads for a specific brand"
+					}
+				},
+				{
+					"name": "Create Reference Ad",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"adType\": \"social_media\",\n    \"platform\": \"Facebook\",\n    \"headline\": \"Transform Your Business with TechFlow\",\n    \"subheadline\": \"Streamline operations and boost productivity\",\n    \"callToAction\": \"Get Started Today\",\n    \"bodyText\": \"Experience the power of AI-driven solutions that revolutionize your business processes.\",\n    \"imageUrl\": \"https://example.com/techflow-ad.jpg\",\n    \"colorScheme\": \"Blue and White\",\n    \"layoutStructure\": \"Modern Grid\",\n    \"targetDemographic\": \"Business Professionals\",\n    \"brand\": {\n        \"id\": 1\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/reference-ads",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reference-ads"]
+						},
+						"description": "Create a new reference ad"
+					}
+				},
+				{
+					"name": "Update Reference Ad",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"adType\": \"social_media\",\n    \"platform\": \"LinkedIn\",\n    \"headline\": \"Updated Headline\",\n    \"subheadline\": \"Updated Subheadline\",\n    \"callToAction\": \"Updated CTA\",\n    \"bodyText\": \"Updated body text\",\n    \"imageUrl\": \"https://example.com/updated-image.jpg\",\n    \"colorScheme\": \"Updated Color Scheme\",\n    \"layoutStructure\": \"Updated Layout\",\n    \"targetDemographic\": \"Updated Target\",\n    \"brand\": {\n        \"id\": 1\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/reference-ads/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reference-ads", "1"]
+						},
+						"description": "Update an existing reference ad"
+					}
+				},
+				{
+					"name": "Delete Reference Ad",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reference-ads/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reference-ads", "1"]
+						},
+						"description": "Delete a reference ad"
+					}
+				}
+			]
+		},
+		{
+			"name": "Generated Ads",
+			"description": "Generated ad management endpoints",
+			"item": [
+				{
+					"name": "Get All Generated Ads",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/generated-ads",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "generated-ads"]
+						},
+						"description": "Retrieve all generated ads"
+					}
+				},
+				{
+					"name": "Get Generated Ad by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/generated-ads/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "generated-ads", "1"]
+						},
+						"description": "Retrieve a specific generated ad by ID"
+					}
+				},
+				{
+					"name": "Get Generated Ads by Brand",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/generated-ads/brand/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "generated-ads", "brand", "1"]
+						},
+						"description": "Retrieve generated ads for a specific brand"
+					}
+				},
+				{
+					"name": "Get Generated Ads by Reference Ad",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/generated-ads/reference/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "generated-ads", "reference", "1"]
+						},
+						"description": "Retrieve generated ads for a specific reference ad"
+					}
+				},
+				{
+					"name": "Create Generated Ad",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"adType\": \"social_media\",\n    \"platform\": \"LinkedIn\",\n    \"headline\": \"Elevate Your Business with TechFlow AI\",\n    \"subheadline\": \"Smart solutions for modern challenges\",\n    \"callToAction\": \"Learn More\",\n    \"bodyText\": \"Harness the power of artificial intelligence to transform your business operations.\",\n    \"imageUrl\": \"https://example.com/techflow-generated.jpg\",\n    \"colorScheme\": \"Blue and White\",\n    \"layoutStructure\": \"Professional Layout\",\n    \"targetDemographic\": \"Tech Leaders\",\n    \"status\": \"approved\",\n    \"brand\": {\n        \"id\": 1\n    },\n    \"referenceAd\": {\n        \"id\": 1\n    },\n    \"generationPrompt\": \"Create a professional LinkedIn ad focusing on AI solutions\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/generated-ads",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "generated-ads"]
+						},
+						"description": "Create a new generated ad"
+					}
+				},
+				{
+					"name": "Update Generated Ad",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"adType\": \"social_media\",\n    \"platform\": \"LinkedIn\",\n    \"headline\": \"Updated Generated Ad Headline\",\n    \"subheadline\": \"Updated Subheadline\",\n    \"callToAction\": \"Updated CTA\",\n    \"bodyText\": \"Updated body text\",\n    \"imageUrl\": \"https://example.com/updated-generated.jpg\",\n    \"colorScheme\": \"Updated Color Scheme\",\n    \"layoutStructure\": \"Updated Layout\",\n    \"targetDemographic\": \"Updated Target\",\n    \"status\": \"approved\",\n    \"brand\": {\n        \"id\": 1\n    },\n    \"referenceAd\": {\n        \"id\": 1\n    },\n    \"generationPrompt\": \"Updated generation prompt\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/generated-ads/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "generated-ads", "1"]
+						},
+						"description": "Update an existing generated ad"
+					}
+				},
+				{
+					"name": "Delete Generated Ad",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/generated-ads/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "generated-ads", "1"]
+						},
+						"description": "Delete a generated ad"
+					}
+				}
+			]
+		},
+		{
+			"name": "Ad Generation",
+			"description": "Ad generation endpoints",
+			"item": [
+				{
+					"name": "Generate Single Ad",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"referenceAd\": {\n        \"id\": 1\n    },\n    \"brand\": {\n        \"id\": 1\n    },\n    \"generationPrompt\": \"Create a professional LinkedIn ad focusing on AI solutions\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "generate"]
+						},
+						"description": "Generate a single ad based on reference ad and brand"
+					}
+				},
+				{
+					"name": "Generate Multiple Ads",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"referenceAd\": {\n        \"id\": 1\n    },\n    \"brand\": {\n        \"id\": 1\n    },\n    \"generationPrompt\": \"Create multiple variations of LinkedIn ads\",\n    \"count\": 3\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/generate/multiple",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "generate", "multiple"]
+						},
+						"description": "Generate multiple ads based on reference ad and brand"
+					}
+				},
+				{
+					"name": "Refine Ad",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"refinementPrompt\": \"Make the ad more focused on enterprise customers\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/refine",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "refine"]
+						},
+						"description": "Refine an existing generated ad"
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [""]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [""]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8083",
+			"type": "string"
+		}
+	]
+} 
