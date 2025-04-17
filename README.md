@@ -71,13 +71,106 @@ The application will be available at `http://localhost:8080`
 - `POST /api/generate` - Generate new ads
 - `POST /api/refine` - Refine an existing ad
 
-## Contributing
+# AI Ad Generator Frontend
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+A modern React application for generating AI-powered advertisements using Material-UI components and a responsive design.
+
+## Features
+
+- 🎨 **Ad Generation**: Create custom ads using AI with brand-specific styling
+- 🏢 **Brand Management**: Manage and organize brands with their unique attributes
+- 📑 **Reference Ads**: Store and use reference ads for better AI generation
+- 📱 **Responsive Design**: Fully responsive layout that works on all screen sizes
+- 🎯 **Category-based Generation**: Generate ads for specific business categories
+
+## Tech Stack
+
+- **React**: Frontend library for building user interfaces
+- **Material-UI (MUI)**: React component library for consistent design
+- **React Router**: Navigation and routing
+- **Axios**: HTTP client for API requests
+- **TypeScript**: Type-safe JavaScript
+
+## Project Structure
+
+```
+front_end/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── pages/         # Page components
+│   │   └── GenerateAd.tsx  # Main ad generation page
+│   ├── types/         # TypeScript interfaces and types
+│   │   └── Category.ts     # Category-related types
+│   ├── theme/         # Material-UI theme customization
+│   ├── services/      # API services and utilities
+│   ├── App.tsx        # Main application component
+│   └── index.tsx      # Application entry point
+├── public/           # Static assets
+└── package.json      # Project dependencies
+```
+
+## Key Components
+
+### GenerateAd Page
+- Main interface for ad generation
+- Features:
+  - Brand selection
+  - Reference ad selection
+  - Category-based generation
+  - Customization options (text, colors, position)
+  - Real-time preview
+  - API response display
+
+### Theme Customization
+- Custom breakpoints (up to 2000px)
+- Responsive container settings
+- Material-UI component overrides
+
+## Available Scripts
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+
+# Build for production
+npm run build
+
+# Run tests
+npm test
+```
+
+## Development Guidelines
+
+1. **Component Structure**
+   - Use TypeScript interfaces for props
+   - Implement responsive design
+   - Follow Material-UI best practices
+
+2. **State Management**
+   - Use React hooks for local state
+   - Implement proper error handling
+   - Maintain loading states
+
+3. **Styling**
+   - Use Material-UI's `sx` prop for styling
+   - Follow theme customization
+   - Ensure responsive behavior
+
+4. **API Integration**
+   - Use axios for API calls
+   - Handle loading and error states
+   - Validate response data
+
+## Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
 
 ## License
 
