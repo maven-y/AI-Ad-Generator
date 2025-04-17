@@ -1,7 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Box, AppBar, Toolbar, Typography, Button, Container, CssBaseline } from '@mui/material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from './theme';
 import GenerateAd from './pages/GenerateAd';
 
 // Create pages
@@ -15,17 +16,6 @@ const Dashboard = () => (
     </Typography>
   </Box>
 );
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-});
 
 function App() {
   return (
@@ -53,7 +43,20 @@ function App() {
             </Toolbar>
           </AppBar>
 
-          <Container sx={{ mt: 4 }}>
+          <Container 
+            maxWidth={false}
+            sx={{ 
+              mt: 4,
+              px: 0,
+              width: '100%',
+              maxWidth: '100% !important',
+              '@media (min-width: 2000px)': {
+                maxWidth: '100%',
+                paddingLeft: 0,
+                paddingRight: 0
+              }
+            }}
+          >
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/brands" element={<div>Brands Page</div>} />
