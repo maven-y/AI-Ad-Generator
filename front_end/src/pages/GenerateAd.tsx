@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import {
   Box,
   Button,
@@ -20,7 +21,9 @@ import {
   Dialog,
   DialogContent,
   DialogActions,
-  Container
+  Container,
+  Popover,
+  Autocomplete
 } from '@mui/material';
 import {
   FormatColorFill,
@@ -31,51 +34,13 @@ import {
 } from '@mui/icons-material';
 import axios from 'axios';
 import { Category, SubCategory, adCategories } from '../types/Category';
+import { generateAd } from '../services/api';
+import { Brand, ReferenceAd, GenerationRequest, GeneratedAdResponse } from '../types';
+import { ChromePicker } from 'react-color';
 
-interface Brand {
-  id: number;
-  name: string;
-  description: string;
-  brandColors: string[];
-  brandFonts: string[];
-  toneOfVoice: string;
-  targetAudience: string;
-}
-
-interface ReferenceAd {
-  id: number;
-  headline: string;
-  subheadline: string;
-  bodyText: string;
-  callToAction: string;
-  platform: string;
-  imageUrl: string;
-  brand: Brand;
-}
-
-interface GeneratedAdResponse {
-  id: number;
-  headline: string;
-  subheadline: string;
-  bodyText: string;
-  imageUrl: string;
-  callToAction: string;
-  status: string;
-  brand: {
-    name: string;
-    description: string;
-    brandColors: string[];
-    brandFonts: string[];
-    toneOfVoice: string;
-    targetAudience: string;
-  };
-  referenceAd: {
-    platform: string;
-    headline: string;
-    subheadline: string;
-    bodyText: string;
-    callToAction: string;
-  };
+interface FormData {
+  brand: Brand | null;
+  referenceAd: ReferenceAd | null;
   generationPrompt: string;
 }
 
@@ -89,39 +54,36 @@ interface AdCustomization {
 const predefinedBrands: Brand[] = [
   {
     id: 1,
-    name: "TechFlow Solutions",
-    description: "Enterprise AI and Digital Transformation",
-    brandColors: ["#2563eb", "#f8fafc"],
-    brandFonts: ["Roboto", "Inter"],
-    toneOfVoice: "Professional and innovative",
-    targetAudience: "Enterprise businesses and tech leaders"
+    name: 'TechFlow',
+    description: 'Innovative tech solutions for modern businesses',
+    brandColors: ['#2196F3', '#1976D2', '#0D47A1'],
+    brandFonts: ['Roboto', 'Open Sans'],
+    toneOfVoice: 'Professional and innovative',
+    targetAudience: 'Tech-savvy professionals',
+    brandPersonality: 'Forward-thinking and reliable',
+    styleKeywords: ['modern', 'clean', 'professional']
   },
   {
     id: 2,
-    name: "GreenEats",
-    description: "Sustainable Food Delivery Service",
-    brandColors: ["#22c55e", "#f0fdf4"],
-    brandFonts: ["Poppins", "Open Sans"],
-    toneOfVoice: "Eco-friendly and welcoming",
-    targetAudience: "Health-conscious urban professionals"
+    name: 'EcoLife',
+    description: 'Sustainable living products for conscious consumers',
+    brandColors: ['#4CAF50', '#2E7D32', '#1B5E20'],
+    brandFonts: ['Montserrat', 'Lato'],
+    toneOfVoice: 'Eco-friendly and inspiring',
+    targetAudience: 'Environmentally conscious consumers',
+    brandPersonality: 'Sustainable and caring',
+    styleKeywords: ['natural', 'eco-friendly', 'sustainable']
   },
   {
     id: 3,
-    name: "EduMaster",
-    description: "Online Learning Platform",
-    brandColors: ["#6366f1", "#eef2ff"],
-    brandFonts: ["Montserrat", "Lato"],
-    toneOfVoice: "Engaging and educational",
-    targetAudience: "Students and lifelong learners"
-  },
-  {
-    id: 4,
-    name: "FitLife Pro",
-    description: "Premium Fitness Equipment and Training",
-    brandColors: ["#ec4899", "#fdf2f8"],
-    brandFonts: ["Nunito", "Source Sans Pro"],
-    toneOfVoice: "Motivational and energetic",
-    targetAudience: "Fitness enthusiasts and health-conscious individuals"
+    name: 'FitFuel',
+    description: 'Premium nutrition for active lifestyles',
+    brandColors: ['#FF5722', '#F4511E', '#BF360C'],
+    brandFonts: ['Poppins', 'Raleway'],
+    toneOfVoice: 'Energetic and motivational',
+    targetAudience: 'Fitness enthusiasts',
+    brandPersonality: 'Dynamic and health-focused',
+    styleKeywords: ['energetic', 'vibrant', 'motivational']
   }
 ];
 
@@ -129,43 +91,160 @@ const predefinedReferenceAds: ReferenceAd[] = [
   {
     id: 1,
     brand: predefinedBrands[0],
-    headline: "Transform Your Business with AI-Powered Solutions",
-    subheadline: "Streamline Operations & Boost Productivity",
-    bodyText: "Leverage cutting-edge AI technology to automate processes and drive growth. Join industry leaders who've achieved 3x ROI with TechFlow.",
-    callToAction: "Schedule a Demo",
+    headline: "Transform Your Business with AI",
+    subheadline: "Streamline operations and boost productivity",
+    bodyText: "Our AI-powered solutions help businesses automate tasks and make data-driven decisions.",
+    callToAction: "Get Started Today",
     platform: "LinkedIn",
-    imageUrl: "https://example.com/techflow-ad.jpg"
+    imageUrl: "https://example.com/tech-ad.jpg",
+    adType: "Sponsored Post",
+    colorScheme: ["#007bff", "#6c757d"],
+    layoutStructure: "Image with overlay text",
+    targetDemographic: "Business decision makers"
   },
   {
     id: 2,
     brand: predefinedBrands[1],
-    headline: "Sustainable Food Delivery at Your Doorstep",
-    subheadline: "Eco-Friendly Packaging, Zero-Emission Delivery",
-    bodyText: "Enjoy restaurant-quality meals delivered in 100% biodegradable packaging. Support local restaurants while saving the planet.",
+    headline: "Fresh, Local, Delivered",
+    subheadline: "Support local restaurants and farmers",
+    bodyText: "Order from your favorite local restaurants and get fresh, sustainable meals delivered.",
     callToAction: "Order Now",
     platform: "Instagram",
-    imageUrl: "https://example.com/greeneats-ad.jpg"
+    imageUrl: "https://example.com/food-ad.jpg",
+    adType: "Story Ad",
+    colorScheme: ["#28a745", "#ffffff"],
+    layoutStructure: "Full-screen image",
+    targetDemographic: "Food enthusiasts"
   },
   {
     id: 3,
     brand: predefinedBrands[2],
-    headline: "Master New Skills from Industry Experts",
-    subheadline: "Learn at Your Own Pace, Anywhere",
-    bodyText: "Access over 1000+ courses from top instructors. Interactive learning experience with certificates upon completion.",
+    headline: "Learn From Industry Experts",
+    subheadline: "Master new skills with our courses",
+    bodyText: "Access high-quality courses taught by industry professionals and advance your career.",
     callToAction: "Start Learning",
     platform: "Facebook",
-    imageUrl: "https://example.com/edumaster-ad.jpg"
+    imageUrl: "https://example.com/edu-ad.jpg",
+    adType: "Carousel Ad",
+    colorScheme: ["#17a2b8", "#ffffff"],
+    layoutStructure: "Multiple images with text",
+    targetDemographic: "Professional learners"
   },
   {
     id: 4,
     brand: predefinedBrands[3],
-    headline: "Achieve Your Fitness Goals with Premium Equipment",
-    subheadline: "Professional-Grade Gear for Home Workouts",
-    bodyText: "Transform your home into a premium gym with our professional-grade equipment. Free training app included!",
+    headline: "Your Fitness Journey Starts Here",
+    subheadline: "Professional equipment for every goal",
+    bodyText: "Get the right equipment and guidance to achieve your fitness goals.",
     callToAction: "Shop Now",
-    platform: "Instagram",
-    imageUrl: "https://example.com/fitlife-ad.jpg"
+    platform: "Facebook",
+    imageUrl: "https://example.com/fitness-ad.jpg",
+    adType: "Image Ad",
+    colorScheme: ["#dc3545", "#ffffff"],
+    layoutStructure: "Product showcase",
+    targetDemographic: "Fitness enthusiasts"
   }
+];
+
+const fontSuggestions = [
+  'Roboto',
+  'Open Sans',
+  'Montserrat',
+  'Lato',
+  'Poppins',
+  'Raleway',
+  'Arial',
+  'Helvetica',
+  'Times New Roman',
+  'Georgia'
+];
+
+const brandNameSuggestions = [
+  'TechFlow',
+  'EcoLife',
+  'FitFuel',
+  'GreenLeaf',
+  'SmartHome',
+  'FreshBite',
+  'UrbanStyle',
+  'CloudTech',
+  'WellnessPlus',
+  'CreativeHub',
+  'NatureCare',
+  'FutureFit',
+  'EcoStyle',
+  'HealthFirst',
+  'SmartLife'
+];
+
+const brandDescriptionSuggestions = [
+  'Innovative tech solutions for modern businesses',
+  'Sustainable living products for conscious consumers',
+  'Premium nutrition for active lifestyles',
+  'Eco-friendly products for a better tomorrow',
+  'Smart home solutions for modern living',
+  'Fresh and healthy food delivery service',
+  'Urban fashion for the modern lifestyle',
+  'Cloud-based solutions for businesses',
+  'Holistic wellness products and services',
+  'Creative solutions for digital needs',
+  'Natural and organic personal care products',
+  'Fitness and wellness for everyone',
+  'Sustainable fashion for conscious consumers',
+  'Healthcare solutions for better living',
+  'Smart technology for everyday life'
+];
+
+const toneSuggestions = [
+  'Professional',
+  'Casual',
+  'Friendly',
+  'Formal',
+  'Humorous',
+  'Serious',
+  'Energetic',
+  'Calm',
+  'Authoritative',
+  'Empathetic'
+];
+
+const audienceSuggestions = [
+  'Young Professionals',
+  'Students',
+  'Parents',
+  'Tech Enthusiasts',
+  'Business Owners',
+  'Creative Professionals',
+  'Health Conscious',
+  'Fashion Forward',
+  'Gamers',
+  'Foodies'
+];
+
+const personalitySuggestions = [
+  'Innovative',
+  'Reliable',
+  'Adventurous',
+  'Sophisticated',
+  'Playful',
+  'Trustworthy',
+  'Dynamic',
+  'Elegant',
+  'Authentic',
+  'Modern'
+];
+
+const styleSuggestions = [
+  'Minimalist',
+  'Bold',
+  'Clean',
+  'Vibrant',
+  'Classic',
+  'Modern',
+  'Elegant',
+  'Playful',
+  'Professional',
+  'Creative'
 ];
 
 const GenerateAd: React.FC = () => {
@@ -175,13 +254,12 @@ const GenerateAd: React.FC = () => {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedAd, setGeneratedAd] = useState<GeneratedAdResponse | null>(null);
-  const [formData, setFormData] = useState({
-    brandId: '',
-    referenceAdId: '',
-    generationPrompt: '',
-    category: '',
-    subcategory: ''
+  const [formData, setFormData] = useState<FormData>({
+    brand: null,
+    referenceAd: null,
+    generationPrompt: ''
   });
+  const [editableBrand, setEditableBrand] = useState<Brand | null>(null);
   const [customization, setCustomization] = useState<AdCustomization>({
     textColor: '#000000',
     backgroundColor: 'transparent',
@@ -192,99 +270,144 @@ const GenerateAd: React.FC = () => {
   const [isImagePopupOpen, setIsImagePopupOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
+  const [colorPickerAnchor, setColorPickerAnchor] = useState<HTMLDivElement | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string>('#000000');
 
   React.useEffect(() => {
     setBrands(predefinedBrands);
     setReferenceAds(predefinedReferenceAds);
     setLoading(false);
+    // Initialize with the first brand and reference ad
+    if (predefinedBrands.length > 0 && predefinedReferenceAds.length > 0) {
+      const initialBrand = { ...predefinedBrands[0] };
+      const initialReferenceAd = { ...predefinedReferenceAds[0] };
+      setFormData({ 
+        brand: initialBrand,
+        referenceAd: initialReferenceAd,
+        generationPrompt: ''
+      });
+      setEditableBrand(initialBrand);
+      setSelectedColor(initialBrand.brandColors[0]);
+    }
   }, []);
 
+  React.useEffect(() => {
+    if (formData.brand) {
+      setEditableBrand({ ...formData.brand });
+      setSelectedColor(formData.brand.brandColors[0]);
+    }
+  }, [formData.brand]);
+
+  const handleCreateNewBrand = () => {
+    const newBrand: Brand = {
+      id: brands.length + 1,
+      name: '',
+      description: '',
+      brandColors: ['#000000'],
+      brandFonts: ['', ''],
+      toneOfVoice: '',
+      targetAudience: '',
+      brandPersonality: '',
+      styleKeywords: []
+    };
+    setBrands([...brands, newBrand]);
+    setFormData({ ...formData, brand: newBrand });
+    setEditableBrand(newBrand);
+    setSelectedColor('#000000');
+  };
+
+  const handleBrandChange = (field: keyof Brand, value: string | string[]) => {
+    if (editableBrand) {
+      const updatedBrand = { ...editableBrand, [field]: value };
+      setEditableBrand(updatedBrand);
+      setFormData({ ...formData, brand: updatedBrand });
+      
+      // Update the brands array with the edited brand
+      const updatedBrands = brands.map(brand => 
+        brand.id === editableBrand.id ? updatedBrand : brand
+      );
+      setBrands(updatedBrands);
+    }
+  };
+
   const handleGenerate = async () => {
-    if (!formData.brandId || !formData.referenceAdId) {
-      setError('Please select both a brand and a reference ad');
-      return;
-    }
-
-    if (!formData.generationPrompt.trim()) {
-      setError('Please enter a generation prompt');
-      return;
-    }
-
-    if (!selectedCategory || !selectedSubCategory) {
-      setError('Please select both a category and subcategory');
-      return;
-    }
-
-    setGenerating(true);
-    setError(null);
     try {
-      console.log('Sending generate request with data:', {
-        referenceAdId: Number(formData.referenceAdId),
-        brandId: Number(formData.brandId),
-        generationPrompt: formData.generationPrompt,
-        category: selectedCategory,
-        subcategory: selectedSubCategory
-      });
-      const response = await axios.post('http://localhost:8084/api/generate', {
-        referenceAdId: Number(formData.referenceAdId),
-        brandId: Number(formData.brandId),
-        generationPrompt: formData.generationPrompt,
-        category: selectedCategory,
-        subcategory: selectedSubCategory
-      });
-      
-      // Structure the response data for better logging
-      const responseData = {
-        brand: {
-          name: response.data.brand.name,
-          description: response.data.brand.description,
-          colors: response.data.brand.brandColors,
-          fonts: response.data.brand.brandFonts,
-          tone: response.data.brand.toneOfVoice,
-          audience: response.data.brand.targetAudience
-        },
-        referenceAd: {
-          platform: response.data.referenceAd.platform,
-          headline: response.data.referenceAd.headline,
-          subheadline: response.data.referenceAd.subheadline,
-          bodyText: response.data.referenceAd.bodyText,
-          callToAction: response.data.referenceAd.callToAction
-        },
-        generatedAd: {
-          imageUrl: response.data.imageUrl,
-          status: response.data.status,
-          prompt: response.data.generationPrompt
-        }
-      };
-      
-      console.log('Generate response:', responseData);
-      setGeneratedAd(response.data);
-    } catch (error) {
-      console.error('Error generating ad:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('Response data:', error.response?.data);
-        console.error('Response status:', error.response?.status);
+      if (!formData.brand?.id || !formData.referenceAd?.id) {
+        setError('Please select a brand and reference ad');
+        return;
       }
-      setError('Failed to generate ad. Please try again.');
-    } finally {
+
+      setGenerating(true);
+      setError(null);
+      
+      const request: GenerationRequest = {
+        brandId: formData.brand.id,
+        referenceAdId: formData.referenceAd.id,
+        generationPrompt: formData.generationPrompt || ''
+      };
+
+      console.log('Sending request:', JSON.stringify(request, null, 2));
+      console.log('Brand:', JSON.stringify(formData.brand, null, 2));
+      console.log('Reference Ad:', JSON.stringify(formData.referenceAd, null, 2));
+      
+      try {
+        const response = await generateAd(request);
+        console.log('Received response:', JSON.stringify(response, null, 2));
+        
+        if (!response || !response.data) {
+          throw new Error('Invalid response from server');
+        }
+        
+        setGeneratedAd(response.data as unknown as GeneratedAdResponse);
+      } catch (apiError: any) {
+        console.error('API Error:', apiError);
+        if (apiError.code === 'ERR_NETWORK') {
+          setError('Network error: Please check if the backend server is running at http://localhost:8084');
+        } else {
+          setError(apiError.response?.data?.message || apiError.message || 'Failed to generate ad. Please try again.');
+        }
+        throw apiError;
+      }
+      
+      setGenerating(false);
+    } catch (error: any) {
+      console.error('Error generating ad:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        code: error.code
+      });
       setGenerating(false);
     }
   };
 
-  const handleBrandChange = (brandId: string) => {
-    setFormData({
-      ...formData,
-      brandId,
-      referenceAdId: '' // Reset reference ad when brand changes
-    });
-  };
-
-  const handleSaveAd = () => {
-    if (!generatedAd?.imageUrl) {
-      setError('No image to save');
-      return;
+  const handleSaveAd = async () => {
+    if (adPreviewRef.current) {
+      try {
+        const canvas = await html2canvas(adPreviewRef.current, {
+          background: 'transparent',
+          logging: false,
+          useCORS: true
+        });
+        
+        canvas.toBlob((blob: Blob | null) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'generated-ad.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+          }
+        }, 'image/png');
+      } catch (error) {
+        console.error('Error saving ad:', error);
+        setError('Failed to save ad. Please try again.');
+      }
     }
-    setIsImagePopupOpen(true);
   };
 
   const handleClosePopup = () => {
@@ -383,50 +506,127 @@ const GenerateAd: React.FC = () => {
           <Card sx={{ mb: 3, width: '100%' }}>
             <CardContent sx={{ p: 2 }}>
               <Stack spacing={2}>
-                <FormControl fullWidth>
-                  <InputLabel>Brand</InputLabel>
-                  <Select
-                    value={formData.brandId}
-                    onChange={(e) => handleBrandChange(e.target.value)}
-                    label="Brand"
-                  >
-                    {predefinedBrands.map((brand) => (
-                      <MenuItem key={brand.id} value={brand.id}>
-                        <Box>
-                          <Typography variant="subtitle2">{brand.name}</Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {brand.description}
-                          </Typography>
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <InputLabel>Reference Ad</InputLabel>
-                  <Select
-                    value={formData.referenceAdId}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      referenceAdId: e.target.value
-                    })}
-                    label="Reference Ad"
-                  >
-                    {predefinedReferenceAds
-                      .filter(ad => !formData.brandId || ad.brand.id === Number(formData.brandId))
-                      .map((ad) => (
-                        <MenuItem key={ad.id} value={ad.id}>
-                          <Box>
-                            <Typography variant="subtitle2">{ad.headline}</Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              Platform: {ad.platform}
-                            </Typography>
-                          </Box>
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
+                {/* Brand Information Section */}
+                <Typography variant="h6" color="primary" gutterBottom>
+                  Brand Information
+                </Typography>
+                <Autocomplete
+                  freeSolo
+                  options={brandNameSuggestions}
+                  value={editableBrand?.name || ''}
+                  onChange={(_, newValue) => handleBrandChange('name', newValue || '')}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Brand Name"
+                      fullWidth
+                      required
+                    />
+                  )}
+                />
+                <Autocomplete
+                  freeSolo
+                  options={brandDescriptionSuggestions}
+                  value={editableBrand?.description || ''}
+                  onChange={(_, newValue) => handleBrandChange('description', newValue || '')}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Brand Description"
+                      fullWidth
+                      required
+                    />
+                  )}
+                />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography>Brand Color</Typography>
+                  <input
+                    type="color"
+                    value={selectedColor}
+                    onChange={(e) => {
+                      const newColor = e.target.value;
+                      setSelectedColor(newColor);
+                      if (editableBrand) {
+                        const updatedBrand = { ...editableBrand, brandColors: [newColor] };
+                        setEditableBrand(updatedBrand);
+                        setFormData({ ...formData, brand: updatedBrand });
+                      }
+                    }}
+                    style={{ width: 50, height: 30, padding: 0 }}
+                  />
+                </Box>
+                <Autocomplete
+                  freeSolo
+                  options={fontSuggestions}
+                  value={editableBrand?.brandFonts[0] || ''}
+                  onChange={(_, newValue) => handleBrandChange('brandFonts', [newValue || ''])}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Brand Font"
+                      fullWidth
+                      required
+                    />
+                  )}
+                />
+                <Autocomplete
+                  freeSolo
+                  options={toneSuggestions}
+                  value={editableBrand?.toneOfVoice || ''}
+                  onChange={(_, newValue) => handleBrandChange('toneOfVoice', newValue || '')}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Tone of Voice"
+                      fullWidth
+                      required
+                    />
+                  )}
+                />
+                <Autocomplete
+                  freeSolo
+                  options={audienceSuggestions}
+                  value={editableBrand?.targetAudience || ''}
+                  onChange={(_, newValue) => handleBrandChange('targetAudience', newValue || '')}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Target Audience"
+                      fullWidth
+                      required
+                    />
+                  )}
+                />
+                <Autocomplete
+                  freeSolo
+                  options={personalitySuggestions}
+                  value={editableBrand?.brandPersonality || ''}
+                  onChange={(_, newValue) => handleBrandChange('brandPersonality', newValue || '')}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Brand Personality"
+                      fullWidth
+                      required
+                    />
+                  )}
+                />
+                <Autocomplete
+                  freeSolo
+                  multiple
+                  options={styleSuggestions}
+                  value={editableBrand?.styleKeywords || []}
+                  onChange={(_, newValue) => handleBrandChange('styleKeywords', newValue)}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Style Keywords"
+                      fullWidth
+                      required
+                      helperText="Separate keywords with commas"
+                    />
+                  )}
+                />
 
                 <FormControl fullWidth>
                   <InputLabel>Category</InputLabel>
@@ -503,7 +703,7 @@ const GenerateAd: React.FC = () => {
                 </Button>
 
                 {/* Built Prompt Display */}
-                {formData.brandId && formData.referenceAdId && formData.generationPrompt && (
+                {formData.brand?.name && formData.referenceAd?.platform && formData.generationPrompt && (
                   <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
                     <Typography variant="subtitle2" gutterBottom color="primary">
                       Generated Prompt Preview
@@ -511,18 +711,18 @@ const GenerateAd: React.FC = () => {
                     <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                       {`Create an advertisement with the following specifications:
 
-Brand: ${getBrandDetails(formData.brandId)?.name || ''}
-Brand Description: ${getBrandDetails(formData.brandId)?.description || ''}
-Brand Colors: ${getBrandDetails(formData.brandId)?.brandColors?.join(', ') || ''}
-Brand Fonts: ${getBrandDetails(formData.brandId)?.brandFonts?.join(', ') || ''}
-Tone of Voice: ${getBrandDetails(formData.brandId)?.toneOfVoice || ''}
-Target Audience: ${getBrandDetails(formData.brandId)?.targetAudience || ''}
+Brand: ${formData.brand.name}
+Brand Description: ${formData.brand.description}
+Brand Colors: ${formData.brand.brandColors.join(', ')}
+Brand Fonts: ${formData.brand.brandFonts.join(', ')}
+Tone of Voice: ${formData.brand.toneOfVoice}
+Target Audience: ${formData.brand.targetAudience}
 
 Reference Ad:
-Platform: ${getReferenceAdDetails(formData.referenceAdId)?.platform || ''}
-Headline: ${getReferenceAdDetails(formData.referenceAdId)?.headline || ''}
-Subheadline: ${getReferenceAdDetails(formData.referenceAdId)?.subheadline || ''}
-Call to Action: ${getReferenceAdDetails(formData.referenceAdId)?.callToAction || ''}
+Platform: ${formData.referenceAd.platform}
+Headline: ${formData.referenceAd.headline}
+Subheadline: ${formData.referenceAd.subheadline}
+Call to Action: ${formData.referenceAd.callToAction}
 
 Category: ${adCategories.find(cat => cat.id === selectedCategory)?.name || ''}
 Subcategory: ${adCategories.find(cat => cat.id === selectedCategory)?.subcategories.find(sub => sub.id === selectedSubCategory)?.name || ''}
@@ -570,20 +770,22 @@ ${formData.generationPrompt}`}
                 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Tooltip title="Text Color">
-                      <IconButton
-                        size="small"
-                        onClick={() => setCustomization(prev => ({
-                          ...prev,
-                          textColor: '#000000'
-                        }))}
-                      >
-                        <FormatColorText />
-                      </IconButton>
+                      <span>
+                        <IconButton
+                          size="small"
+                          onClick={() => setCustomization((prev: AdCustomization) => ({
+                            ...prev,
+                            textColor: '#000000'
+                          }))}
+                        >
+                          <FormatColorText />
+                        </IconButton>
+                      </span>
                     </Tooltip>
                     <input
                       type="color"
                       value={customization.textColor}
-                      onChange={(e) => setCustomization(prev => ({
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomization(prev => ({
                         ...prev,
                         textColor: e.target.value
                       }))}

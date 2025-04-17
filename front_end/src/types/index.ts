@@ -1,5 +1,5 @@
 export interface Brand {
-    id?: number;
+    id: number;
     name: string;
     description: string;
     brandColors: string[];
@@ -11,20 +11,18 @@ export interface Brand {
 }
 
 export interface ReferenceAd {
-    id?: number;
-    adType: string;
-    platform: string;
+    id: number;
+    brand: Brand;
     headline: string;
     subheadline: string;
-    callToAction: string;
     bodyText: string;
+    callToAction: string;
+    platform: string;
     imageUrl: string;
-    colorScheme: string;
-    layoutStructure: string;
-    targetDemographic: string;
-    brand: {
-        id: number;
-    };
+    adType?: string;
+    colorScheme?: string[];
+    layoutStructure?: string;
+    targetDemographic?: string;
 }
 
 export interface GeneratedAd extends ReferenceAd {
@@ -44,4 +42,22 @@ export interface GenerationRequest {
 export interface RefinementRequest {
     id: number;
     refinementPrompt: string;
+}
+
+export interface GeneratedAdResponse {
+    id?: number;
+    adType: string;
+    platform: string;
+    headline: string;
+    subheadline: string;
+    callToAction: string;
+    bodyText: string;
+    imageUrl: string;
+    colorScheme: string;
+    layoutStructure: string;
+    targetDemographic: string;
+    status: 'draft' | 'approved' | 'rejected';
+    generationPrompt: string;
+    brand: Brand;
+    referenceAd: ReferenceAd;
 } 
