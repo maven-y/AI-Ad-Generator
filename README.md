@@ -3,6 +3,13 @@
 
 Created a Java-based AI Ad Generator. 
 
+
+
+![Details Screen](https://github.com/maven-y/AI-Ad-Generator/blob/d80894b7e6e3d741dc073ee5745894a28b5fc7f3/1.png)
+
+
+
+
 # AI Ad Generator Backend
 
 Using Spring Boot for the backend and integrating with AI services for text and image generation.
