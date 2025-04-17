@@ -16,13 +16,17 @@ import {
   Paper,
   Slider,
   IconButton,
-  Tooltip
+  Tooltip,
+  Dialog,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import {
   FormatColorFill,
   FormatColorText,
   TextFields,
-  Save
+  Save,
+  Close
 } from '@mui/icons-material';
 import axios from 'axios';
 
@@ -73,6 +77,7 @@ const GenerateAd: React.FC = () => {
     textPosition: 'bottom'
   });
   const adPreviewRef = React.useRef<HTMLDivElement>(null);
+  const [isImagePopupOpen, setIsImagePopupOpen] = useState(false);
 
   React.useEffect(() => {
     fetchData();
@@ -103,17 +108,32 @@ const GenerateAd: React.FC = () => {
       return;
     }
 
+    if (!formData.generationPrompt.trim()) {
+      setError('Please enter a generation prompt');
+      return;
+    }
+
     setGenerating(true);
     setError(null);
     try {
+      console.log('Sending generate request with data:', {
+        referenceAdId: Number(formData.referenceAdId),
+        brandId: Number(formData.brandId),
+        generationPrompt: formData.generationPrompt
+      });
       const response = await axios.post('http://localhost:8084/api/generate', {
         referenceAdId: Number(formData.referenceAdId),
         brandId: Number(formData.brandId),
         generationPrompt: formData.generationPrompt
       });
+      console.log('Generate response:', response.data);
       setGeneratedAd(response.data);
     } catch (error) {
       console.error('Error generating ad:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Response data:', error.response?.data);
+        console.error('Response status:', error.response?.status);
+      }
       setError('Failed to generate ad. Please try again.');
     } finally {
       setGenerating(false);
@@ -129,8 +149,32 @@ const GenerateAd: React.FC = () => {
   };
 
   const handleSaveAd = () => {
-    setError('Ad saved successfully!');
-    setTimeout(() => setError(null), 3000);
+    if (!generatedAd?.imageUrl) {
+      setError('No image to save');
+      return;
+    }
+    setIsImagePopupOpen(true);
+  };
+
+  const handleClosePopup = () => {
+    setIsImagePopupOpen(false);
+  };
+
+  const handleDownload = () => {
+    if (!generatedAd?.imageUrl) return;
+    
+    // Create an invisible iframe to trigger the browser's save dialog
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    
+    // Set the iframe source to the image URL
+    iframe.src = generatedAd.imageUrl;
+    
+    // Remove the iframe after a short delay
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 1000);
   };
 
   if (loading) {
@@ -193,7 +237,7 @@ const GenerateAd: React.FC = () => {
               </FormControl>
 
               <TextField
-                label="Generation Prompt (Optional)"
+                label="Generation Prompt"
                 value={formData.generationPrompt}
                 onChange={(e) => setFormData({
                   ...formData,
@@ -202,7 +246,8 @@ const GenerateAd: React.FC = () => {
                 fullWidth
                 multiline
                 rows={3}
-                placeholder="Enter any specific requirements or preferences for the generated ad..."
+                required
+                placeholder="Enter specific requirements or preferences for the generated ad..."
               />
 
               <Button
@@ -407,6 +452,53 @@ const GenerateAd: React.FC = () => {
           </Paper>
         )}
       </Box>
+
+      <Dialog
+        open={isImagePopupOpen}
+        onClose={handleClosePopup}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogContent sx={{ p: 0, position: 'relative' }}>
+          <IconButton
+            onClick={handleClosePopup}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              bgcolor: 'rgba(255, 255, 255, 0.8)',
+              '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
+            }}
+          >
+            <Close />
+          </IconButton>
+          {generatedAd?.imageUrl && (
+            <img
+              src={generatedAd.imageUrl}
+              alt="Generated ad"
+              style={{ width: '100%', height: 'auto' }}
+            />
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={handleClosePopup}>Close</Button>
+          <Button
+            variant="outlined"
+            onClick={handleDownload}
+          >
+            Download
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              window.open(generatedAd?.imageUrl, '_blank');
+              handleClosePopup();
+            }}
+          >
+            Open in New Tab
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
