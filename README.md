@@ -5,7 +5,7 @@ Created a Java-based AI Ad Generator.
 
 Using Spring Boot for the backend and integrating with AI services for text and image generation.
 
-An AI-powered advertisement generator that produces new, on-brand ads from reference ads. This application uses OpenAI's GPT-4 and DALL-E to generate creative advertisements while maintaining brand consistency.
+An AI-powered advertisement generator that produces new, on-brand ads from reference ads. This application uses OpenAI's GPT-3.5 to generate creative advertisements while maintaining brand consistency.
 
 
 ## Features
@@ -27,8 +27,8 @@ An AI-powered advertisement generator that produces new, on-brand ads from refer
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/ai-ad-generator.git
-cd ai-ad-generator
+git clone https://github.com/maven-y/AI-Ad-Generator.git
+cd AI-Ad-Generator
 ```
 
 2. Configure OpenAI API key:
@@ -85,6 +85,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- OpenAI for providing the GPT-4 and DALL-E APIs
+- OpenAI for providing the GPT-3.5 APIs
 - Spring Boot team for the excellent framework
 - All contributors who help improve this project 
