@@ -86,5 +86,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Acknowledgments
 
 - OpenAI for providing the GPT-3.5 APIs
-- Spring Boot team for the excellent framework
-- All contributors who help improve this project 
+- Spring Boot framework
+- React JS for Front End
