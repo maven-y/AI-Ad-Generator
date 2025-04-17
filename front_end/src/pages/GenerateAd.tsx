@@ -382,36 +382,23 @@ const GenerateAd: React.FC = () => {
     }
   };
 
-  const handleSaveAd = async () => {
-    if (adPreviewRef.current) {
-      try {
-        const canvas = await html2canvas(adPreviewRef.current, {
-          background: 'transparent',
-          logging: false,
-          useCORS: true
-        });
-        
-        canvas.toBlob((blob: Blob | null) => {
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'generated-ad.png';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-          }
-        }, 'image/png');
-      } catch (error) {
-        console.error('Error saving ad:', error);
-        setError('Failed to save ad. Please try again.');
-      }
+  const handleSaveAd = () => {
+    if (generatedAd?.imageUrl) {
+      setIsImagePopupOpen(true);
+    } else {
+      setError('No image available to save.');
     }
   };
 
   const handleClosePopup = () => {
     setIsImagePopupOpen(false);
+  };
+
+  const handleOpenInNewTab = () => {
+    if (generatedAd?.imageUrl) {
+      window.open(generatedAd.imageUrl, '_blank');
+      handleClosePopup();
+    }
   };
 
   const handleDownload = () => {
@@ -1052,17 +1039,8 @@ ${formData.generationPrompt}`}
           <DialogActions sx={{ p: 2 }}>
             <Button onClick={handleClosePopup}>Close</Button>
             <Button
-              variant="outlined"
-              onClick={handleDownload}
-            >
-              Download
-            </Button>
-            <Button
               variant="contained"
-              onClick={() => {
-                window.open(generatedAd?.imageUrl, '_blank');
-                handleClosePopup();
-              }}
+              onClick={handleOpenInNewTab}
             >
               Open in New Tab
             </Button>
