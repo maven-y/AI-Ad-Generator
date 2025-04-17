@@ -490,19 +490,48 @@ const GenerateAd: React.FC = () => {
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={handleGenerate}
-                  disabled={generating || !formData.brandId || !formData.referenceAdId}
                   fullWidth
+                  onClick={handleGenerate}
+                  disabled={generating}
+                  sx={{ height: 48 }}
                 >
                   {generating ? (
-                    <>
-                      <CircularProgress size={24} sx={{ mr: 1 }} />
-                      Generating...
-                    </>
+                    <CircularProgress size={24} color="inherit" />
                   ) : (
-                    'Generate Ad'
+                    'GENERATE AD'
                   )}
                 </Button>
+
+                {/* Built Prompt Display */}
+                {formData.brandId && formData.referenceAdId && formData.generationPrompt && (
+                  <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                    <Typography variant="subtitle2" gutterBottom color="primary">
+                      Generated Prompt Preview
+                    </Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                      {`Create an advertisement with the following specifications:
+
+Brand: ${getBrandDetails(formData.brandId)?.name || ''}
+Brand Description: ${getBrandDetails(formData.brandId)?.description || ''}
+Brand Colors: ${getBrandDetails(formData.brandId)?.brandColors?.join(', ') || ''}
+Brand Fonts: ${getBrandDetails(formData.brandId)?.brandFonts?.join(', ') || ''}
+Tone of Voice: ${getBrandDetails(formData.brandId)?.toneOfVoice || ''}
+Target Audience: ${getBrandDetails(formData.brandId)?.targetAudience || ''}
+
+Reference Ad:
+Platform: ${getReferenceAdDetails(formData.referenceAdId)?.platform || ''}
+Headline: ${getReferenceAdDetails(formData.referenceAdId)?.headline || ''}
+Subheadline: ${getReferenceAdDetails(formData.referenceAdId)?.subheadline || ''}
+Call to Action: ${getReferenceAdDetails(formData.referenceAdId)?.callToAction || ''}
+
+Category: ${adCategories.find(cat => cat.id === selectedCategory)?.name || ''}
+Subcategory: ${adCategories.find(cat => cat.id === selectedCategory)?.subcategories.find(sub => sub.id === selectedSubCategory)?.name || ''}
+
+Custom Requirements:
+${formData.generationPrompt}`}
+                    </Typography>
+                  </Box>
+                )}
               </Stack>
             </CardContent>
           </Card>
