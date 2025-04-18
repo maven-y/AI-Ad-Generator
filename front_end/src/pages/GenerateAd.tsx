@@ -428,21 +428,171 @@ const GenerateAd: React.FC = () => {
     }
   };
 
-  const handleDownload = () => {
-    if (!generatedAd?.imageUrl) return;
-    
-    // Create an invisible iframe to trigger the browser's save dialog
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    
-    // Set the iframe source to the image URL
-    iframe.src = generatedAd.imageUrl;
-    
-    // Remove the iframe after a short delay
-    setTimeout(() => {
-      document.body.removeChild(iframe);
-    }, 1000);
+  const handleDownload = async () => {
+    if (!generatedAd) return;
+
+    try {
+      // Create a container for the image and text overlay
+      const container = document.createElement('div');
+      container.style.width = '512px';
+      container.style.height = '512px';
+      container.style.position = 'relative';
+      container.style.backgroundColor = '#ffffff';
+
+      // Create and style the image
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = generatedAd.imageUrl;
+      });
+
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'cover';
+      img.style.position = 'absolute';
+      img.style.top = '0';
+      img.style.left = '0';
+
+      // Create and style the text overlay
+      const textOverlayDiv = document.createElement('div');
+      textOverlayDiv.style.position = 'absolute';
+      textOverlayDiv.style.width = '100%';
+      textOverlayDiv.style.padding = '16px';
+      textOverlayDiv.style.textAlign = textOverlay.textAlign;
+      textOverlayDiv.style.backgroundColor = `${textOverlay.backgroundColor}${Math.round(textOverlay.backgroundOpacity * 255).toString(16).padStart(2, '0')}`;
+      textOverlayDiv.style.zIndex = '10';
+      textOverlayDiv.style.display = 'flex';
+      textOverlayDiv.style.justifyContent = textOverlay.textAlign === 'center' ? 'center' : 
+                                          textOverlay.textAlign === 'right' ? 'flex-end' : 'flex-start';
+
+      // Position the text overlay
+      if (textOverlay.position === 'top') {
+        textOverlayDiv.style.top = '0';
+      } else if (textOverlay.position === 'center') {
+        textOverlayDiv.style.top = '50%';
+        textOverlayDiv.style.transform = 'translateY(-50%)';
+      } else {
+        textOverlayDiv.style.bottom = '0';
+      }
+
+      // Create and style the text
+      const text = document.createElement('p');
+      text.textContent = textOverlay.text;
+      text.style.margin = '0';
+      text.style.fontSize = `${textOverlay.fontSize}px`;
+      text.style.color = textOverlay.color;
+      text.style.fontFamily = textOverlay.fontFamily;
+      text.style.fontWeight = textOverlay.fontWeight;
+      text.style.textShadow = textOverlay.textShadow ? '1px 1px 2px rgba(0,0,0,0.2)' : 'none';
+      text.style.whiteSpace = 'pre-wrap';
+      text.style.wordBreak = 'break-word';
+
+      // Assemble the elements
+      textOverlayDiv.appendChild(text);
+      container.appendChild(img);
+      container.appendChild(textOverlayDiv);
+
+      // Add the container to the document temporarily
+      document.body.appendChild(container);
+
+      // Use html2canvas to capture the entire container
+      const canvas = await html2canvas(container, {
+        useCORS: true,
+        allowTaint: true,
+        background: '#ffffff',
+        logging: true
+      });
+
+      // Remove the temporary container
+      document.body.removeChild(container);
+
+      // Convert to blob and download
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          console.error('Failed to create blob from canvas');
+          return;
+        }
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `generated-ad-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 'image/png', 1.0);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      setError('Failed to download image. Please try again.');
+    }
+  };
+
+  const handleTextOverlayChange = (field: keyof TextOverlay, value: string | number | boolean) => {
+    setTextOverlay(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const ImageWithTextOverlay = ({ imageUrl, textOverlay }: { imageUrl: string, textOverlay: TextOverlay }) => {
+    const imageRef = useRef<HTMLImageElement>(null);
+    const textOverlayRef = useRef<HTMLDivElement>(null);
+
+    return (
+      <Box sx={{ position: 'relative', width: '100%', height: 'auto' }}>
+        <img
+          ref={imageRef}
+          src={imageUrl}
+          alt="Generated ad"
+          style={{ 
+            width: '100%', 
+            height: 'auto',
+            display: 'block'
+          }}
+        />
+        {textOverlay.text && (
+          <Box
+            ref={textOverlayRef}
+            data-text-overlay
+            sx={{
+              position: 'absolute',
+              width: '100%',
+              padding: 2,
+              textAlign: textOverlay.textAlign,
+              ...(textOverlay.position === 'top' && { top: 0 }),
+              ...(textOverlay.position === 'center' && { 
+                top: '50%', 
+                transform: 'translateY(-50%)' 
+              }),
+              ...(textOverlay.position === 'bottom' && { bottom: 0 }),
+              backgroundColor: `${textOverlay.backgroundColor}${Math.round(textOverlay.backgroundOpacity * 255).toString(16).padStart(2, '0')}`,
+              zIndex: 10,
+              display: 'flex',
+              justifyContent: textOverlay.textAlign === 'center' ? 'center' : 
+                            textOverlay.textAlign === 'right' ? 'flex-end' : 'flex-start'
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: `${textOverlay.fontSize}px`,
+                color: textOverlay.color,
+                fontFamily: textOverlay.fontFamily,
+                fontWeight: textOverlay.fontWeight,
+                textShadow: textOverlay.textShadow ? '1px 1px 2px rgba(0,0,0,0.2)' : 'none',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word'
+              }}
+            >
+              {textOverlay.text}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    );
   };
 
   const getPromptPlaceholder = (category: string, subcategory: string) => {
@@ -460,59 +610,6 @@ const GenerateAd: React.FC = () => {
 
   const getReferenceAdDetails = (adId: string) => {
     return predefinedReferenceAds.find(ad => ad.id === Number(adId));
-  };
-
-  const handleTextOverlayChange = (field: keyof TextOverlay, value: string | number) => {
-    setTextOverlay(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const ImageWithTextOverlay = ({ imageUrl, textOverlay }: { imageUrl: string, textOverlay: TextOverlay }) => {
-    return (
-      <Box sx={{ position: 'relative', width: '100%', height: 'auto' }}>
-        <img
-          src={imageUrl}
-          alt="Generated ad"
-          style={{ 
-            width: '100%', 
-            height: 'auto',
-            display: 'block'
-          }}
-        />
-        {textOverlay.text && (
-          <Box
-            sx={{
-              position: 'absolute',
-              width: '100%',
-              padding: 2,
-              textAlign: textOverlay.textAlign,
-              ...(textOverlay.position === 'top' && { top: 0 }),
-              ...(textOverlay.position === 'center' && { 
-                top: '50%', 
-                transform: 'translateY(-50%)' 
-              }),
-              ...(textOverlay.position === 'bottom' && { bottom: 0 }),
-              backgroundColor: `${textOverlay.backgroundColor}${Math.round(textOverlay.backgroundOpacity * 255).toString(16).padStart(2, '0')}`,
-              zIndex: 10
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: `${textOverlay.fontSize}px`,
-                color: textOverlay.color,
-                fontFamily: textOverlay.fontFamily,
-                fontWeight: textOverlay.fontWeight,
-                textShadow: textOverlay.textShadow ? '1px 1px 2px rgba(0,0,0,0.2)' : 'none'
-              }}
-            >
-              {textOverlay.text}
-            </Typography>
-          </Box>
-        )}
-      </Box>
-    );
   };
 
   if (loading) {
@@ -885,6 +982,91 @@ ${formData.generationPrompt}`}
                         onChange={(e) => handleTextOverlayChange('color', e.target.value)}
                         style={{ width: 30, height: 30, padding: 0 }}
                       />
+                    </Box>
+
+                    <FormControl sx={{ minWidth: 200 }}>
+                      <InputLabel>Text Font</InputLabel>
+                      <Select
+                        value={textOverlay.fontFamily}
+                        onChange={(e) => handleTextOverlayChange('fontFamily', e.target.value)}
+                        label="Text Font"
+                      >
+                        <MenuItem value="Arial, sans-serif">Arial</MenuItem>
+                        <MenuItem value="'Times New Roman', serif">Times New Roman</MenuItem>
+                        <MenuItem value="'Helvetica Neue', sans-serif">Helvetica Neue</MenuItem>
+                        <MenuItem value="'Roboto', sans-serif">Roboto</MenuItem>
+                        <MenuItem value="'Open Sans', sans-serif">Open Sans</MenuItem>
+                        <MenuItem value="'Montserrat', sans-serif">Montserrat</MenuItem>
+                        <MenuItem value="'Poppins', sans-serif">Poppins</MenuItem>
+                        <MenuItem value="'Raleway', sans-serif">Raleway</MenuItem>
+                        <MenuItem value="'Dancing Script', cursive">Dancing Script</MenuItem>
+                        <MenuItem value="'Great Vibes', cursive">Great Vibes</MenuItem>
+                        <MenuItem value="'Pacifico', cursive">Pacifico</MenuItem>
+                        <MenuItem value="'Satisfy', cursive">Satisfy</MenuItem>
+                        <MenuItem value="'Tangerine', cursive">Tangerine</MenuItem>
+                        <MenuItem value="'Parisienne', cursive">Parisienne</MenuItem>
+                        <MenuItem value="'Alex Brush', cursive">Alex Brush</MenuItem>
+                        <MenuItem value="'Sacramento', cursive">Sacramento</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <FormControl sx={{ minWidth: 120 }}>
+                      <InputLabel>Font Weight</InputLabel>
+                      <Select
+                        value={textOverlay.fontWeight}
+                        onChange={(e) => handleTextOverlayChange('fontWeight', e.target.value as 'normal' | 'bold' | 'lighter')}
+                        label="Font Weight"
+                      >
+                        <MenuItem value="normal">Normal</MenuItem>
+                        <MenuItem value="bold">Bold</MenuItem>
+                        <MenuItem value="lighter">Light</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <FormControl sx={{ minWidth: 120 }}>
+                      <InputLabel>Text Align</InputLabel>
+                      <Select
+                        value={textOverlay.textAlign}
+                        onChange={(e) => handleTextOverlayChange('textAlign', e.target.value as 'left' | 'center' | 'right')}
+                        label="Text Align"
+                      >
+                        <MenuItem value="left">Left</MenuItem>
+                        <MenuItem value="center">Center</MenuItem>
+                        <MenuItem value="right">Right</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={textOverlay.textShadow}
+                          onChange={(e) => handleTextOverlayChange('textShadow', e.target.checked)}
+                        />
+                      }
+                      label="Text Shadow"
+                    />
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography>Background Color:</Typography>
+                      <input
+                        type="color"
+                        value={textOverlay.backgroundColor}
+                        onChange={(e) => handleTextOverlayChange('backgroundColor', e.target.value)}
+                        style={{ width: 30, height: 30, padding: 0 }}
+                      />
+                    </Box>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 200 }}>
+                      <Typography>Background Opacity:</Typography>
+                      <Slider
+                        value={textOverlay.backgroundOpacity}
+                        onChange={(_, value) => handleTextOverlayChange('backgroundOpacity', value as number)}
+                        min={0}
+                        max={1}
+                        step={0.1}
+                        size="small"
+                      />
+                      <Typography sx={{ minWidth: 30 }}>{Math.round(textOverlay.backgroundOpacity * 100)}%</Typography>
                     </Box>
                   </Box>
                 </Box>
