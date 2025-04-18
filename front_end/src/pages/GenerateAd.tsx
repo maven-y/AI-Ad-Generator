@@ -23,7 +23,9 @@ import {
   DialogActions,
   Container,
   Popover,
-  Autocomplete
+  Autocomplete,
+  FormControlLabel,
+  Switch
 } from '@mui/material';
 import {
   FormatColorFill,
@@ -49,6 +51,19 @@ interface AdCustomization {
   backgroundColor: string;
   fontSize: number;
   textPosition: 'top' | 'bottom' | 'center';
+}
+
+interface TextOverlay {
+  text: string;
+  position: 'top' | 'center' | 'bottom';
+  fontSize: number;
+  color: string;
+  fontFamily: string;
+  fontWeight: 'normal' | 'bold' | 'lighter';
+  textAlign: 'left' | 'center' | 'right';
+  textShadow: boolean;
+  backgroundColor: string;
+  backgroundOpacity: number;
 }
 
 const predefinedBrands: Brand[] = [
@@ -272,6 +287,18 @@ const GenerateAd: React.FC = () => {
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
   const [colorPickerAnchor, setColorPickerAnchor] = useState<HTMLDivElement | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>('#000000');
+  const [textOverlay, setTextOverlay] = useState<TextOverlay>({
+    text: '',
+    position: 'bottom',
+    fontSize: 24,
+    color: '#000000',
+    fontFamily: 'Arial, sans-serif',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    textShadow: true,
+    backgroundColor: '#ffffff',
+    backgroundOpacity: 0.7
+  });
 
   React.useEffect(() => {
     setBrands(predefinedBrands);
@@ -433,6 +460,59 @@ const GenerateAd: React.FC = () => {
 
   const getReferenceAdDetails = (adId: string) => {
     return predefinedReferenceAds.find(ad => ad.id === Number(adId));
+  };
+
+  const handleTextOverlayChange = (field: keyof TextOverlay, value: string | number) => {
+    setTextOverlay(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const ImageWithTextOverlay = ({ imageUrl, textOverlay }: { imageUrl: string, textOverlay: TextOverlay }) => {
+    return (
+      <Box sx={{ position: 'relative', width: '100%', height: 'auto' }}>
+        <img
+          src={imageUrl}
+          alt="Generated ad"
+          style={{ 
+            width: '100%', 
+            height: 'auto',
+            display: 'block'
+          }}
+        />
+        {textOverlay.text && (
+          <Box
+            sx={{
+              position: 'absolute',
+              width: '100%',
+              padding: 2,
+              textAlign: textOverlay.textAlign,
+              ...(textOverlay.position === 'top' && { top: 0 }),
+              ...(textOverlay.position === 'center' && { 
+                top: '50%', 
+                transform: 'translateY(-50%)' 
+              }),
+              ...(textOverlay.position === 'bottom' && { bottom: 0 }),
+              backgroundColor: `${textOverlay.backgroundColor}${Math.round(textOverlay.backgroundOpacity * 255).toString(16).padStart(2, '0')}`,
+              zIndex: 10
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: `${textOverlay.fontSize}px`,
+                color: textOverlay.color,
+                fontFamily: textOverlay.fontFamily,
+                fontWeight: textOverlay.fontWeight,
+                textShadow: textOverlay.textShadow ? '1px 1px 2px rgba(0,0,0,0.2)' : 'none'
+              }}
+            >
+              {textOverlay.text}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    );
   };
 
   if (loading) {
@@ -747,94 +827,66 @@ ${formData.generationPrompt}`}
                 width: '100%',
                 overflowX: 'auto'
               }}>
+                {/* Text Overlay Controls */}
+                <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                  Text Overlay
+                </Typography>
                 <Box sx={{ 
                   display: 'flex', 
-                  gap: 2, 
-                  alignItems: 'center', 
-                  flexWrap: 'wrap', 
+                  flexDirection: 'column',
+                  gap: 2,
                   mb: 3,
-                  width: '100%'
+                  p: 2,
+                  border: '1px solid #e0e0e0',
+                  borderRadius: 1
                 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Tooltip title="Text Color">
-                      <span>
-                        <IconButton
-                          size="small"
-                          onClick={() => setCustomization((prev: AdCustomization) => ({
-                            ...prev,
-                            textColor: '#000000'
-                          }))}
-                        >
-                          <FormatColorText />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                    <input
-                      type="color"
-                      value={customization.textColor}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomization(prev => ({
-                        ...prev,
-                        textColor: e.target.value
-                      }))}
-                      style={{ width: 30, height: 30, padding: 0 }}
-                    />
-                  </Box>
-
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Tooltip title="Background Color">
-                      <IconButton
-                        size="small"
-                        onClick={() => setCustomization(prev => ({
-                          ...prev,
-                          backgroundColor: 'transparent'
-                        }))}
+                  <TextField
+                    label="Overlay Text"
+                    value={textOverlay.text}
+                    onChange={(e) => handleTextOverlayChange('text', e.target.value)}
+                    fullWidth
+                    multiline
+                    rows={2}
+                    placeholder="Enter text to overlay on the image"
+                  />
+                  
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <FormControl sx={{ minWidth: 120 }}>
+                      <InputLabel>Position</InputLabel>
+                      <Select
+                        value={textOverlay.position}
+                        onChange={(e) => handleTextOverlayChange('position', e.target.value as 'top' | 'center' | 'bottom')}
+                        label="Position"
                       >
-                        <FormatColorFill />
-                      </IconButton>
-                    </Tooltip>
-                    <input
-                      type="color"
-                      value={customization.backgroundColor}
-                      onChange={(e) => setCustomization(prev => ({
-                        ...prev,
-                        backgroundColor: e.target.value
-                      }))}
-                      style={{ width: 30, height: 30, padding: 0 }}
-                    />
+                        <MenuItem value="top">Top</MenuItem>
+                        <MenuItem value="center">Center</MenuItem>
+                        <MenuItem value="bottom">Bottom</MenuItem>
+                      </Select>
+                    </FormControl>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 200 }}>
+                      <Typography>Font Size:</Typography>
+                      <Slider
+                        value={textOverlay.fontSize}
+                        onChange={(_, value) => handleTextOverlayChange('fontSize', value as number)}
+                        min={12}
+                        max={72}
+                        step={1}
+                        size="small"
+                      />
+                      <Typography sx={{ minWidth: 30 }}>{textOverlay.fontSize}px</Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography>Text Color:</Typography>
+                      <input
+                        type="color"
+                        value={textOverlay.color}
+                        onChange={(e) => handleTextOverlayChange('color', e.target.value)}
+                        style={{ width: 30, height: 30, padding: 0 }}
+                      />
+                    </Box>
                   </Box>
-
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 200 }}>
-                    <Tooltip title="Font Size">
-                      <TextFields fontSize="small" />
-                    </Tooltip>
-                    <Slider
-                      value={customization.fontSize}
-                      onChange={(_, value) => setCustomization(prev => ({
-                        ...prev,
-                        fontSize: value as number
-                      }))}
-                      min={12}
-                      max={32}
-                      step={1}
-                      size="small"
-                    />
-                  </Box>
-
-                  <FormControl size="small" sx={{ minWidth: 120 }}>
-                    <InputLabel>Position</InputLabel>
-                    <Select
-                      value={customization.textPosition}
-                      onChange={(e) => setCustomization(prev => ({
-                        ...prev,
-                        textPosition: e.target.value as 'top' | 'bottom' | 'center'
-                      }))}
-                      label="Position"
-                    >
-                      <MenuItem value="top">Top</MenuItem>
-                      <MenuItem value="center">Center</MenuItem>
-                      <MenuItem value="bottom">Bottom</MenuItem>
-                    </Select>
-                  </FormControl>
                 </Box>
               </Box>
 
@@ -857,70 +909,11 @@ ${formData.generationPrompt}`}
                   }}
                 >
                   {generatedAd.imageUrl && (
-                    <Box sx={{ width: '100%', position: 'relative' }}>
-                      <img
-                        src={generatedAd.imageUrl}
-                        alt="Generated ad"
-                        style={{ 
-                          width: '100%', 
-                          height: 'auto',
-                          display: 'block'
-                        }}
-                      />
-                    </Box>
+                    <ImageWithTextOverlay
+                      imageUrl={generatedAd.imageUrl}
+                      textOverlay={textOverlay}
+                    />
                   )}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      width: '100%',
-                      padding: 2,
-                      ...(customization.textPosition === 'top' && { top: 0 }),
-                      ...(customization.textPosition === 'center' && { top: '50%', transform: 'translateY(-50%)' }),
-                      ...(customization.textPosition === 'bottom' && { bottom: 0 }),
-                      backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: customization.textColor,
-                        fontSize: `${customization.fontSize}px`,
-                        fontWeight: 'bold',
-                        mb: 1
-                      }}
-                    >
-                      {generatedAd.headline}
-                    </Typography>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        color: customization.textColor,
-                        fontSize: `${customization.fontSize - 2}px`,
-                        mb: 1
-                      }}
-                    >
-                      {generatedAd.subheadline}
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: customization.textColor,
-                        fontSize: `${customization.fontSize - 4}px`,
-                        mb: 2
-                      }}
-                    >
-                      {generatedAd.bodyText}
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      sx={{
-                        fontSize: `${customization.fontSize - 4}px`,
-                      }}
-                    >
-                      {generatedAd.callToAction}
-                    </Button>
-                  </Box>
                 </Box>
 
                 {/* API Response Data */}
@@ -1029,10 +1022,9 @@ ${formData.generationPrompt}`}
               <Close />
             </IconButton>
             {generatedAd?.imageUrl && (
-              <img
-                src={generatedAd.imageUrl}
-                alt="Generated ad"
-                style={{ width: '100%', height: 'auto' }}
+              <ImageWithTextOverlay 
+                imageUrl={generatedAd.imageUrl} 
+                textOverlay={textOverlay} 
               />
             )}
           </DialogContent>
