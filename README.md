@@ -134,6 +134,11 @@ front_end/
 - Custom breakpoints (up to 2000px)
 - Responsive container settings
 - Material-UI component overrides
+- 
+
+### Both servers are :
+- The Spring Boot backend server will be accessible at http://localhost:8084
+- The React frontend server will be accessible at http://localhost:3000
 
 ## Available Scripts
 
