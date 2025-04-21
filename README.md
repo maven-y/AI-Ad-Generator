@@ -5,7 +5,7 @@ Created a Java-based AI Ad Generator.
 
 
 
-![Details Screen](https://github.com/maven-y/AI-Ad-Generator/blob/d80894b7e6e3d741dc073ee5745894a28b5fc7f3/1.png)
+![Details Screen](https://github.com/maven-y/AI-Ad-Generator/blob/f2f014b24803d465d63b867809aad3830f559bf0/1.png)
 
 
 
