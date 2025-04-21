@@ -639,13 +639,27 @@ const GenerateAd: React.FC = () => {
                     <div class="overlay-text">${textOverlay.text}</div>
                   </div>
                   <div class="download-buttons">
-                    <button onclick="downloadWithOverlay('" + generatedAd.imageUrl + "')" class="download-button">Download Image</button>
+                    <button onclick="downloadWithOverlay('${generatedAd.imageUrl}')" class="download-button">Download Image</button>
                   </div>
                 </div>
               </div>
               <p style="text-align: center; color: #666;">Preview generated on ${new Date().toLocaleString()}</p>
             </div>
             <script>
+              // Define textOverlay object with the same properties as in React
+              const textOverlay = {
+                text: "${textOverlay.text.replace(/"/g, '\\"')}",
+                position: "${textOverlay.position}",
+                fontSize: ${textOverlay.fontSize},
+                color: "${textOverlay.color}",
+                fontFamily: "${textOverlay.fontFamily.replace(/"/g, '\\"')}",
+                fontWeight: "${textOverlay.fontWeight}",
+                textAlign: "${textOverlay.textAlign}",
+                textShadow: ${textOverlay.textShadow},
+                backgroundColor: "${textOverlay.backgroundColor}",
+                backgroundOpacity: ${textOverlay.backgroundOpacity}
+              };
+              
               function downloadWithOverlay(imageUrl) {
                 // Create a canvas to draw the image with overlay
                 const canvas = document.createElement('canvas');
