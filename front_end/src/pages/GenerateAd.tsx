@@ -639,66 +639,128 @@ const GenerateAd: React.FC = () => {
                     <div class="overlay-text">${textOverlay.text}</div>
                   </div>
                   <div class="download-buttons">
-                    <button onclick="downloadWithOverlay()" class="download-button">Download Image</button>
+                    <button onclick="downloadWithOverlay('" + generatedAd.imageUrl + "')" class="download-button">Download Image</button>
                   </div>
                 </div>
               </div>
               <p style="text-align: center; color: #666;">Preview generated on ${new Date().toLocaleString()}</p>
             </div>
             <script>
-              function downloadWithOverlay() {
-                // Open the original image in a new tab
-                window.open(generatedAd.imageUrl, "_blank");
+              function downloadWithOverlay(imageUrl) {
+                // Create a canvas to draw the image with overlay
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 512;
+                const ctx = canvas.getContext('2d');
                 
-                // Show a message about the overlay image
-                alert("Due to browser security restrictions, the image with overlay cannot be displayed directly. You can download the original image and add text using an image editor.");
-                
-                // Create a simple HTML page with instructions
-                const instructionsWindow = window.open('', '_blank');
-                if (instructionsWindow) {
-                  const htmlContent = [
-                    '<!DOCTYPE html>',
-                    '<html>',
-                    '  <head>',
-                    '    <title>Text Overlay Instructions</title>',
-                    '    <style>',
-                    '      body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }',
-                    '      h1 { color: #333; }',
-                    '      .instructions { background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin-bottom: 20px; }',
-                    '      .text-properties { background-color: #e9f7fe; padding: 15px; border-radius: 5px; margin-top: 20px; }',
-                    '      .download-link { display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-top: 20px; }',
-                    '      .download-link:hover { background-color: #45a049; }',
-                    '    </style>',
-                    '  </head>',
-                    '  <body>',
-                    '    <h1>Text Overlay Instructions</h1>',
-                    '    <div class="instructions">',
-                    '      <p>Due to browser security restrictions, we cannot automatically generate the image with text overlay. Here are the text properties you can use to manually add the overlay:</p>',
-                    '      <div class="text-properties">',
-                    '        <h3>Text Properties:</h3>',
-                    '        <ul>',
-                    '          <li><strong>Text:</strong> ' + textOverlay.text + '</li>',
-                    '          <li><strong>Position:</strong> ' + textOverlay.position + '</li>',
-                    '          <li><strong>Font Size:</strong> ' + textOverlay.fontSize + 'px</li>',
-                    '          <li><strong>Color:</strong> <span style="color: ' + textOverlay.color + '">' + textOverlay.color + '</span></li>',
-                    '          <li><strong>Font Family:</strong> ' + textOverlay.fontFamily + '</li>',
-                    '          <li><strong>Font Weight:</strong> ' + textOverlay.fontWeight + '</li>',
-                    '          <li><strong>Text Align:</strong> ' + textOverlay.textAlign + '</li>',
-                    '          <li><strong>Text Shadow:</strong> ' + (textOverlay.textShadow ? 'Yes' : 'No') + '</li>',
-                    '          <li><strong>Background Color:</strong> <span style="color: ' + textOverlay.backgroundColor + '">' + textOverlay.backgroundColor + '</span></li>',
-                    '          <li><strong>Background Opacity:</strong> ' + Math.round(textOverlay.backgroundOpacity * 100) + '%</li>',
-                    '        </ul>',
-                    '      </div>',
-                    '      <p>You can use these properties in an image editor like Photoshop, GIMP, or online tools like Canva to add the text overlay to your image.</p>',
-                    '      <a href="' + generatedAd.imageUrl + '" download="original-ad-' + Date.now() + '.png" class="download-link">Download Original Image</a>',
-                    '    </div>',
-                    '  </body>',
-                    '</html>'
-                  ].join('\n');
-                  
-                  instructionsWindow.document.write(htmlContent);
-                  instructionsWindow.document.close();
+                if (!ctx) {
+                  alert("Could not create canvas context");
+                  return;
                 }
+
+                // Fill with white background
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Load the image
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                
+                img.onload = function() {
+                  // Draw the image
+                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                  // Add text overlay if it exists
+                  if (textOverlay.text) {
+                    // Set text properties
+                    ctx.font = textOverlay.fontWeight + ' ' + textOverlay.fontSize + 'px ' + textOverlay.fontFamily;
+                    ctx.fillStyle = textOverlay.color;
+                    ctx.textAlign = textOverlay.textAlign;
+                    
+                    // Add text shadow if enabled
+                    if (textOverlay.textShadow) {
+                      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                      ctx.shadowBlur = 4;
+                      ctx.shadowOffsetX = 2;
+                      ctx.shadowOffsetY = 2;
+                    }
+
+                    // Add background if needed
+                    if (textOverlay.backgroundColor !== 'transparent' && textOverlay.backgroundOpacity > 0) {
+                      const textWidth = ctx.measureText(textOverlay.text).width;
+                      const textHeight = textOverlay.fontSize * 1.2; // Approximate height
+                      
+                      // Calculate position based on text alignment
+                      let x = 0;
+                      if (textOverlay.textAlign === 'center') {
+                        x = canvas.width / 2;
+                      } else if (textOverlay.textAlign === 'right') {
+                        x = canvas.width - 20;
+                      } else {
+                        x = 20;
+                      }
+                      
+                      // Calculate y position based on position property
+                      let y = 0;
+                      if (textOverlay.position === 'top') {
+                        y = textHeight + 20;
+                      } else if (textOverlay.position === 'center') {
+                        y = canvas.height / 2;
+                      } else {
+                        y = canvas.height - 20;
+                      }
+                      
+                      // Draw background
+                      const opacityHex = Math.round(textOverlay.backgroundOpacity * 255).toString(16).padStart(2, '0');
+                      ctx.fillStyle = textOverlay.backgroundColor + opacityHex;
+                      ctx.fillRect(x - textWidth / 2 - 10, y - textHeight / 2 - 5, textWidth + 20, textHeight + 10);
+                    }
+
+                    // Reset shadow for text
+                    if (textOverlay.textShadow) {
+                      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                      ctx.shadowBlur = 4;
+                      ctx.shadowOffsetX = 2;
+                      ctx.shadowOffsetY = 2;
+                    }
+
+                    // Draw text
+                    let x = 0;
+                    if (textOverlay.textAlign === 'center') {
+                      x = canvas.width / 2;
+                    } else if (textOverlay.textAlign === 'right') {
+                      x = canvas.width - 20;
+                    } else {
+                      x = 20;
+                    }
+                    
+                    let y = 0;
+                    if (textOverlay.position === 'top') {
+                      y = textOverlay.fontSize + 20;
+                    } else if (textOverlay.position === 'center') {
+                      y = canvas.height / 2;
+                    } else {
+                      y = canvas.height - 20;
+                    }
+                    
+                    ctx.fillText(textOverlay.text, x, y);
+                  }
+
+                  // Convert canvas to data URL and download
+                  const dataURL = canvas.toDataURL('image/png');
+                  const downloadLink = document.createElement('a');
+                  downloadLink.href = dataURL;
+                  downloadLink.download = 'ad-with-text-' + Date.now() + '.png';
+                  document.body.appendChild(downloadLink);
+                  downloadLink.click();
+                  document.body.removeChild(downloadLink);
+                };
+                
+                img.onerror = function() {
+                  alert("Failed to load image. Please try again.");
+                };
+                
+                img.src = imageUrl;
               }
             </script>
           </body>
