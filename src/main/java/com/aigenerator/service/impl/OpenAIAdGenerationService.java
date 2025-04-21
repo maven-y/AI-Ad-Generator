@@ -24,13 +24,10 @@ public class OpenAIAdGenerationService implements AdGenerationService {
 
     @Override
     public GeneratedAd generateAd(ReferenceAd referenceAd, Brand brand, String generationPrompt) {
-        // Create a prompt that incorporates brand guidelines and reference ad
-        String prompt = buildPrompt(referenceAd, brand, generationPrompt);
-        
-        // Generate ad copy using GPT
+        // Use the generation prompt directly
         ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
-                .model("gpt-3.5-turbo")
-                .messages(List.of(new ChatMessage("user", prompt)))
+                .model("gpt-4.1")
+                .messages(List.of(new ChatMessage("user", generationPrompt)))
                 .maxTokens(500)
                 .temperature(0.7)
                 .build();
@@ -47,9 +44,8 @@ public class OpenAIAdGenerationService implements AdGenerationService {
         
         // Generate image if needed
         if (referenceAd.getImageUrl() != null) {
-            String imagePrompt = buildImagePrompt(referenceAd, brand, generatedAd);
             CreateImageRequest imageRequest = CreateImageRequest.builder()
-                    .prompt(imagePrompt)
+                    .prompt(generationPrompt)
                     .n(1)
                     .size("1024x1024")
                     .build();
@@ -72,11 +68,9 @@ public class OpenAIAdGenerationService implements AdGenerationService {
 
     @Override
     public GeneratedAd refineAd(GeneratedAd ad, String refinementPrompt) {
-        String prompt = buildRefinementPrompt(ad, refinementPrompt);
-        
         ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
                 .model("gpt-3.5-turbo")
-                .messages(List.of(new ChatMessage("user", prompt)))
+                .messages(List.of(new ChatMessage("user", refinementPrompt)))
                 .maxTokens(500)
                 .temperature(0.7)
                 .build();
@@ -87,89 +81,6 @@ public class OpenAIAdGenerationService implements AdGenerationService {
         // Update the ad with refined content
         updateAdWithRefinedText(ad, refinedText);
         return ad;
-    }
-
-    private String buildPrompt(ReferenceAd referenceAd, Brand brand, String generationPrompt) {
-        return String.format("""
-            Create a new advertisement based on the following:
-            
-            Brand Guidelines:
-            - Name: %s
-            - Tone of Voice: %s
-            - Target Audience: %s
-            - Brand Personality: %s
-            - Style Keywords: %s
-            
-            Reference Ad:
-            - Type: %s
-            - Platform: %s
-            - Headline: %s
-            - Subheadline: %s
-            - Call to Action: %s
-            - Body Text: %s
-            
-            Additional Requirements:
-            %s
-            
-            Please generate a new ad that maintains brand consistency while being creative and unique.
-            """,
-            brand.getName(),
-            brand.getToneOfVoice(),
-            brand.getTargetAudience(),
-            brand.getBrandPersonality(),
-            String.join(", ", brand.getStyleKeywords()),
-            referenceAd.getAdType(),
-            referenceAd.getPlatform(),
-            referenceAd.getHeadline(),
-            referenceAd.getSubheadline(),
-            referenceAd.getCallToAction(),
-            referenceAd.getBodyText(),
-            generationPrompt
-        );
-    }
-
-    private String buildImagePrompt(ReferenceAd referenceAd, Brand brand, GeneratedAd generatedAd) {
-        return String.format("""
-            Create an advertisement image with the following characteristics:
-            
-            Brand Colors: %s
-            Style: %s
-            
-            The image should complement this ad copy:
-            Headline: %s
-            Subheadline: %s
-            
-            Reference layout: %s
-            """,
-            String.join(", ", brand.getBrandColors()),
-            String.join(", ", brand.getStyleKeywords()),
-            generatedAd.getHeadline(),
-            generatedAd.getSubheadline(),
-            referenceAd.getLayoutStructure()
-        );
-    }
-
-    private String buildRefinementPrompt(GeneratedAd ad, String refinementPrompt) {
-        return String.format("""
-            Refine this advertisement based on the following requirements:
-            
-            Current Ad:
-            Headline: %s
-            Subheadline: %s
-            Call to Action: %s
-            Body Text: %s
-            
-            Refinement Request:
-            %s
-            
-            Please provide an improved version that addresses the refinement request while maintaining brand consistency.
-            """,
-            ad.getHeadline(),
-            ad.getSubheadline(),
-            ad.getCallToAction(),
-            ad.getBodyText(),
-            refinementPrompt
-        );
     }
 
     private GeneratedAd parseGeneratedText(String generatedText) {
