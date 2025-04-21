@@ -634,7 +634,7 @@ const GenerateAd: React.FC = () => {
                 </div>
                 <div class="image-box">
                   <h3>Image with Text Overlay</h3>
-                  <div class="text-overlay">
+                  <div class="text-overlay" id="overlay-container">
                     <img src="${generatedAd.imageUrl}" alt="Ad with Text Overlay" />
                     <div class="overlay-text">${textOverlay.text}</div>
                   </div>
@@ -647,14 +647,17 @@ const GenerateAd: React.FC = () => {
             </div>
             <script>
               function downloadWithOverlay() {
-                // Create a canvas element
+                // Open the original image in a new tab
+                window.open("${generatedAd.imageUrl}", "_blank");
+                
+                // Create a canvas to draw the image with overlay
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 if (!ctx) {
                   alert('Could not create canvas context');
                   return;
                 }
-
+                
                 // Set canvas dimensions
                 canvas.width = 512;
                 canvas.height = 512;
@@ -662,7 +665,7 @@ const GenerateAd: React.FC = () => {
                 // Fill with white background
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+                
                 // Load the image
                 const img = new Image();
                 img.crossOrigin = 'anonymous';
@@ -670,41 +673,59 @@ const GenerateAd: React.FC = () => {
                 img.onload = function() {
                   // Draw the image
                   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                  // Add text overlay
-                  ctx.font = '${textOverlay.fontWeight} ${textOverlay.fontSize}px ${textOverlay.fontFamily}';
-                  ctx.fillStyle = '${textOverlay.color}';
-                  ctx.textAlign = '${textOverlay.textAlign}';
                   
-                  if (${textOverlay.textShadow}) {
+                  // Add text overlay
+                  const text = "${textOverlay.text.replace(/"/g, '\\"')}";
+                  const fontWeight = "${textOverlay.fontWeight}";
+                  const fontSize = ${textOverlay.fontSize};
+                  const fontFamily = "${textOverlay.fontFamily.replace(/"/g, '\\"')}";
+                  const color = "${textOverlay.color}";
+                  const textAlign = "${textOverlay.textAlign}";
+                  const textShadow = ${textOverlay.textShadow};
+                  const position = "${textOverlay.position}";
+                  const backgroundColor = "${textOverlay.backgroundColor}";
+                  const backgroundOpacity = ${textOverlay.backgroundOpacity};
+                  
+                  // Set text properties
+                  ctx.font = fontWeight + ' ' + fontSize + 'px ' + fontFamily;
+                  ctx.fillStyle = color;
+                  ctx.textAlign = textAlign;
+                  
+                  // Add text shadow if enabled
+                  if (textShadow) {
                     ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
                     ctx.shadowBlur = 2;
                     ctx.shadowOffsetX = 1;
                     ctx.shadowOffsetY = 1;
                   }
-
+                  
+                  // Calculate text position
                   let y = 0;
-                  if ('${textOverlay.position}' === 'top') {
-                    y = ${textOverlay.fontSize} + 20;
-                  } else if ('${textOverlay.position}' === 'center') {
+                  if (position === 'top') {
+                    y = fontSize + 20;
+                  } else if (position === 'center') {
                     y = canvas.height / 2;
-                  } else if ('${textOverlay.position}' === 'bottom') {
+                  } else if (position === 'bottom') {
                     y = canvas.height - 20;
                   }
-
-                  if ('${textOverlay.backgroundColor}' !== 'transparent' && ${textOverlay.backgroundOpacity} > 0) {
-                    const textWidth = ctx.measureText('${textOverlay.text}').width;
-                    const textHeight = ${textOverlay.fontSize};
+                  
+                  // Add background for text if needed
+                  if (backgroundColor !== 'transparent' && backgroundOpacity > 0) {
+                    const textWidth = ctx.measureText(text).width;
+                    const textHeight = fontSize;
                     const padding = 10;
                     
+                    // Calculate background position based on text alignment
                     let bgX = 0;
-                    if ('${textOverlay.textAlign}' === 'center') {
+                    if (textAlign === 'center') {
                       bgX = canvas.width / 2 - textWidth / 2 - padding;
-                    } else if ('${textOverlay.textAlign}' === 'right') {
+                    } else if (textAlign === 'right') {
                       bgX = canvas.width - textWidth - padding * 2;
                     }
                     
-                    ctx.fillStyle = '${textOverlay.backgroundColor}${Math.round(textOverlay.backgroundOpacity * 255).toString(16).padStart(2, '0')}';
+                    // Draw background
+                    const opacityHex = Math.round(backgroundOpacity * 255).toString(16).padStart(2, '0');
+                    ctx.fillStyle = backgroundColor + opacityHex;
                     ctx.fillRect(
                       bgX, 
                       y - textHeight - padding, 
@@ -712,20 +733,15 @@ const GenerateAd: React.FC = () => {
                       textHeight + padding * 2
                     );
                   }
-
-                  ctx.fillText('${textOverlay.text}', 
-                    '${textOverlay.textAlign}' === 'center' ? canvas.width / 2 : 
-                    '${textOverlay.textAlign}' === 'right' ? canvas.width - 20 : 20, 
-                    y
-                  );
-
-                  // Create download link
-                  const link = document.createElement('a');
-                  link.href = canvas.toDataURL('image/png');
-                  link.download = 'ad-with-text-${Date.now()}.png';
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
+                  
+                  // Draw text
+                  const x = textAlign === 'center' ? canvas.width / 2 : 
+                           textAlign === 'right' ? canvas.width - 20 : 20;
+                  ctx.fillText(text, x, y);
+                  
+                  // Open the image with overlay in a new tab
+                  const dataURL = canvas.toDataURL('image/png');
+                  window.open(dataURL, '_blank');
                 };
                 
                 img.onerror = function() {
@@ -733,7 +749,7 @@ const GenerateAd: React.FC = () => {
                 };
                 
                 // Set the source to trigger loading
-                img.src = '${generatedAd.imageUrl}';
+                img.src = "${generatedAd.imageUrl}";
               }
             </script>
           </body>
