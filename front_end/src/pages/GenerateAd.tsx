@@ -34,7 +34,8 @@ import {
   Save,
   Close,
   OpenInNew,
-  Download
+  Download,
+  Image
 } from '@mui/icons-material';
 import axios from 'axios';
 import { Category, SubCategory, adCategories } from '../types/Category';
@@ -528,134 +529,24 @@ const GenerateAd: React.FC = () => {
     if (!generatedAd) return;
 
     try {
-      // Create a new window with both images
-      const newWindow = window.open('', '_blank');
-      if (!newWindow) {
-        setError('Pop-up blocked. Please allow pop-ups for this site.');
-        return;
-      }
-
-      // Create the HTML content for the new window
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Ad Preview</title>
-            <style>
-              body {
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 20px;
-                background-color: #f5f5f5;
-              }
-              .container {
-                max-width: 1200px;
-                margin: 0 auto;
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
-              }
-              .image-container {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 20px;
-                justify-content: center;
-              }
-              .image-box {
-                background-color: white;
-                padding: 15px;
-                border-radius: 8px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                max-width: 500px;
-              }
-              .image-box h3 {
-                margin-top: 0;
-                text-align: center;
-                color: #333;
-              }
-              img {
-                max-width: 100%;
-                height: auto;
-                display: block;
-                margin: 0 auto;
-              }
-              .text-overlay {
-                position: relative;
-                width: 100%;
-                height: auto;
-              }
-              .overlay-text {
-                position: absolute;
-                width: 100%;
-                text-align: ${textOverlay.textAlign};
-                color: ${textOverlay.color};
-                font-family: ${textOverlay.fontFamily};
-                font-weight: ${textOverlay.fontWeight};
-                font-size: ${textOverlay.fontSize}px;
-                ${textOverlay.textShadow ? 'text-shadow: 1px 1px 2px rgba(0,0,0,0.2);' : ''}
-                ${textOverlay.position === 'top' ? 'top: 20px;' : ''}
-                ${textOverlay.position === 'center' ? 'top: 50%; transform: translateY(-50%);' : ''}
-                ${textOverlay.position === 'bottom' ? 'bottom: 20px;' : ''}
-                padding: 10px;
-                ${textOverlay.backgroundColor !== 'transparent' && textOverlay.backgroundOpacity > 0 
-                  ? `background-color: ${textOverlay.backgroundColor}${Math.round(textOverlay.backgroundOpacity * 255).toString(16).padStart(2, '0')};` 
-                  : ''}
-              }
-              .download-buttons {
-                display: flex;
-                gap: 10px;
-                justify-content: center;
-                margin-top: 20px;
-              }
-              .download-button {
-                padding: 10px 20px;
-                background-color: #4CAF50;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                text-decoration: none;
-              }
-              .download-button:hover {
-                background-color: #45a049;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <h1 style="text-align: center;">Ad Preview</h1>
-              <div class="image-container">
-                <div class="image-box">
-                  <h3>Original Image</h3>
-                  <img src="${generatedAd.imageUrl}" alt="Original Ad" />
-                  <div class="download-buttons">
-                    <a href="${generatedAd.imageUrl}" download="original-ad.png" target="_blank" rel="noopener noreferrer" class="download-button">Save Original</a>
-                  </div>
-                </div>
-                <div class="image-box">
-                  <h3>Image with Text Overlay</h3>
-                  <div class="text-overlay" id="overlay-container">
-                    <img src="${generatedAd.imageUrl}" alt="Ad with Overlay" />
-                    <div class="overlay-text">${textOverlay.text}</div>
-                  </div>
-                  <div class="download-buttons">
-                    <a href="${generatedAd.imageUrl}" download="ad-with-text.png" target="_blank" rel="noopener noreferrer" class="download-button">Save Image</a>
-                  </div>
-                </div>
-              </div>
-              <p style="text-align: center; color: #666;">Preview generated on ${new Date().toLocaleString()}</p>
-            </div>
-          </body>
-        </html>
-      `;
-
-      // Write the HTML content to the new window
-      newWindow.document.write(htmlContent);
-      newWindow.document.close();
+      // First save the div as PNG
+      await handleSaveDivAsPNG();
+      
+      // Then save the image URL in a text file
+      const textContent = generatedAd.imageUrl;
+      const blob = new Blob([textContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'image-url.txt';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
     } catch (error) {
-      console.error('Error opening preview:', error);
-      setError('Failed to open preview. Please try again.');
+      console.error('Error saving files:', error);
+      setError('Failed to save files. Please try again.');
     }
   };
 
@@ -671,7 +562,15 @@ const GenerateAd: React.FC = () => {
     const textOverlayRef = useRef<HTMLDivElement>(null);
 
     return (
-      <Box sx={{ position: 'relative', width: '100%', height: 'auto' }}>
+      <Box 
+        id="overlay-container"
+        sx={{ 
+          position: 'relative', 
+          width: '100%', 
+          height: 'auto',
+          backgroundColor: 'transparent'
+        }}
+      >
         <img
           ref={imageRef}
           src={imageUrl}
@@ -705,6 +604,7 @@ const GenerateAd: React.FC = () => {
             }}
           >
             <Typography
+              component="div"
               sx={{
                 fontSize: `${textOverlay.fontSize}px`,
                 color: textOverlay.color,
@@ -712,7 +612,10 @@ const GenerateAd: React.FC = () => {
                 fontWeight: textOverlay.fontWeight,
                 textShadow: textOverlay.textShadow ? '1px 1px 2px rgba(0,0,0,0.2)' : 'none',
                 whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word'
+                wordBreak: 'break-word',
+                display: 'block',
+                width: '100%',
+                textAlign: textOverlay.textAlign
               }}
             >
               {textOverlay.text}
@@ -738,6 +641,81 @@ const GenerateAd: React.FC = () => {
 
   const getReferenceAdDetails = (adId: string) => {
     return predefinedReferenceAds.find(ad => ad.id === Number(adId));
+  };
+
+  const handleSaveDivAsPNG = async () => {
+    console.log('Starting handleSaveDivAsPNG function');
+    const element = document.getElementById('overlay-container');
+    console.log('Found element:', element);
+    
+    if (!element) {
+      console.error('Element with id "overlay-container" not found');
+      setError('Could not find the element to save. Please try again.');
+      return;
+    }
+
+    try {
+      // Create a temporary container with transparent background
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '-9999px';
+      tempContainer.style.backgroundColor = 'transparent';
+      document.body.appendChild(tempContainer);
+      
+      // Clone the element with all its content
+      const clone = element.cloneNode(true) as HTMLElement;
+      clone.style.backgroundColor = 'transparent';
+      tempContainer.appendChild(clone);
+
+      // Wait for images to load
+      const images = clone.getElementsByTagName('img');
+      await Promise.all(Array.from(images).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      }));
+
+      console.log('Starting html2canvas conversion');
+      const canvas = await html2canvas(clone, {
+        useCORS: true,
+        background: 'transparent',
+        logging: true,
+        width: element.offsetWidth * 2,
+        height: element.offsetHeight * 2,
+        allowTaint: true
+      });
+      console.log('Canvas created:', canvas);
+
+      // Clean up
+      document.body.removeChild(tempContainer);
+
+      console.log('Converting canvas to blob');
+      canvas.toBlob((blob) => {
+        console.log('Blob created:', blob);
+        if (blob) {
+          console.log('Creating download link');
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'ad-with-overlay.png';
+          document.body.appendChild(link);
+          console.log('Triggering download');
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          console.log('Download process completed');
+        } else {
+          console.error('Failed to create blob from canvas');
+          setError('Failed to create image. Please try again.');
+        }
+      }, 'image/png', 1.0);
+    } catch (error) {
+      console.error('Error in handleSaveDivAsPNG:', error);
+      setError('Failed to save image. Please try again.');
+    }
   };
 
   if (loading) {
@@ -1300,6 +1278,7 @@ ${formData.generationPrompt}`}
                   Status: {generatedAd.status}
                 </Typography>
                 <Box>
+                  
                   <Tooltip title="Save Customized Ad">
                     <IconButton 
                       color="primary"
