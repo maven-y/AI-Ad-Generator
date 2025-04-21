@@ -629,7 +629,7 @@ const GenerateAd: React.FC = () => {
                   <h3>Original Image</h3>
                   <img src="${generatedAd.imageUrl}" alt="Original Ad" />
                   <div class="download-buttons">
-                    <a href="${generatedAd.imageUrl}" download="original-ad-${Date.now()}.png" class="download-button">Download Original</a>
+                    <a href="${generatedAd.imageUrl}" download="original-ad.png" target="_blank" rel="noopener noreferrer" class="download-button">Save Original</a>
                   </div>
                 </div>
                 <div class="image-box">
@@ -639,7 +639,7 @@ const GenerateAd: React.FC = () => {
                     <div class="overlay-text">${textOverlay.text}</div>
                   </div>
                   <div class="download-buttons">
-                    <a href="${generatedAd.imageUrl}" download="ad-with-text-${Date.now()}.png" class="download-button">Download Image</a>
+                    <a href="${generatedAd.imageUrl}" download="ad-with-text.png" target="_blank" rel="noopener noreferrer" class="download-button">Save Image</a>
                   </div>
                 </div>
               </div>
