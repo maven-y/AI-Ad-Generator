@@ -635,148 +635,16 @@ const GenerateAd: React.FC = () => {
                 <div class="image-box">
                   <h3>Image with Text Overlay</h3>
                   <div class="text-overlay" id="overlay-container">
-                    <img src="${generatedAd.imageUrl}" alt="Ad with Text Overlay" />
+                    <img src="${generatedAd.imageUrl}" alt="Ad with Overlay" />
                     <div class="overlay-text">${textOverlay.text}</div>
                   </div>
                   <div class="download-buttons">
-                    <button onclick="downloadWithOverlay('${generatedAd.imageUrl}')" class="download-button">Download Image</button>
+                    <a href="${generatedAd.imageUrl}" download="ad-with-text-${Date.now()}.png" class="download-button">Download Image</a>
                   </div>
                 </div>
               </div>
               <p style="text-align: center; color: #666;">Preview generated on ${new Date().toLocaleString()}</p>
             </div>
-            <script>
-              // Define textOverlay object with the same properties as in React
-              const textOverlay = {
-                text: "${textOverlay.text.replace(/"/g, '\\"')}",
-                position: "${textOverlay.position}",
-                fontSize: ${textOverlay.fontSize},
-                color: "${textOverlay.color}",
-                fontFamily: "${textOverlay.fontFamily.replace(/"/g, '\\"')}",
-                fontWeight: "${textOverlay.fontWeight}",
-                textAlign: "${textOverlay.textAlign}",
-                textShadow: ${textOverlay.textShadow},
-                backgroundColor: "${textOverlay.backgroundColor}",
-                backgroundOpacity: ${textOverlay.backgroundOpacity}
-              };
-              
-              function downloadWithOverlay(imageUrl) {
-                // Create a canvas to draw the image with overlay
-                const canvas = document.createElement('canvas');
-                canvas.width = 512;
-                canvas.height = 512;
-                const ctx = canvas.getContext('2d');
-                
-                if (!ctx) {
-                  alert("Could not create canvas context");
-                  return;
-                }
-
-                // Fill with white background
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                // Load the image
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                
-                img.onload = function() {
-                  // Draw the image
-                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                  // Add text overlay if it exists
-                  if (textOverlay.text) {
-                    // Set text properties
-                    ctx.font = textOverlay.fontWeight + ' ' + textOverlay.fontSize + 'px ' + textOverlay.fontFamily;
-                    ctx.fillStyle = textOverlay.color;
-                    ctx.textAlign = textOverlay.textAlign;
-                    
-                    // Add text shadow if enabled
-                    if (textOverlay.textShadow) {
-                      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-                      ctx.shadowBlur = 4;
-                      ctx.shadowOffsetX = 2;
-                      ctx.shadowOffsetY = 2;
-                    }
-
-                    // Add background if needed
-                    if (textOverlay.backgroundColor !== 'transparent' && textOverlay.backgroundOpacity > 0) {
-                      const textWidth = ctx.measureText(textOverlay.text).width;
-                      const textHeight = textOverlay.fontSize * 1.2; // Approximate height
-                      
-                      // Calculate position based on text alignment
-                      let x = 0;
-                      if (textOverlay.textAlign === 'center') {
-                        x = canvas.width / 2;
-                      } else if (textOverlay.textAlign === 'right') {
-                        x = canvas.width - 20;
-                      } else {
-                        x = 20;
-                      }
-                      
-                      // Calculate y position based on position property
-                      let y = 0;
-                      if (textOverlay.position === 'top') {
-                        y = textHeight + 20;
-                      } else if (textOverlay.position === 'center') {
-                        y = canvas.height / 2;
-                      } else {
-                        y = canvas.height - 20;
-                      }
-                      
-                      // Draw background
-                      const opacityHex = Math.round(textOverlay.backgroundOpacity * 255).toString(16).padStart(2, '0');
-                      ctx.fillStyle = textOverlay.backgroundColor + opacityHex;
-                      ctx.fillRect(x - textWidth / 2 - 10, y - textHeight / 2 - 5, textWidth + 20, textHeight + 10);
-                    }
-
-                    // Reset shadow for text
-                    if (textOverlay.textShadow) {
-                      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-                      ctx.shadowBlur = 4;
-                      ctx.shadowOffsetX = 2;
-                      ctx.shadowOffsetY = 2;
-                    }
-
-                    // Draw text
-                    let x = 0;
-                    if (textOverlay.textAlign === 'center') {
-                      x = canvas.width / 2;
-                    } else if (textOverlay.textAlign === 'right') {
-                      x = canvas.width - 20;
-                    } else {
-                      x = 20;
-                    }
-                    
-                    let y = 0;
-                    if (textOverlay.position === 'top') {
-                      y = textOverlay.fontSize + 20;
-                    } else if (textOverlay.position === 'center') {
-                      y = canvas.height / 2;
-                    } else {
-                      y = canvas.height - 20;
-                    }
-                    
-                    ctx.fillText(textOverlay.text, x, y);
-                  }
-
-                  // Convert canvas to data URL and download
-                  const dataURL = canvas.toDataURL('image/png');
-                  const downloadLink = document.createElement('a');
-                  downloadLink.href = dataURL;
-                  downloadLink.download = 'ad-with-text-' + Date.now() + '.png';
-                  document.body.appendChild(downloadLink);
-                  downloadLink.click();
-                  document.body.removeChild(downloadLink);
-                };
-                
-                img.onerror = function() {
-                  alert("Failed to load image. Please try again.");
-                };
-                
-                img.src = imageUrl;
-              }
-            </script>
           </body>
         </html>
       `;
