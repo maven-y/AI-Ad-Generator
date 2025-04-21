@@ -648,108 +648,57 @@ const GenerateAd: React.FC = () => {
             <script>
               function downloadWithOverlay() {
                 // Open the original image in a new tab
-                window.open("${generatedAd.imageUrl}", "_blank");
+                window.open(generatedAd.imageUrl, "_blank");
                 
-                // Create a canvas to draw the image with overlay
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                  alert('Could not create canvas context');
-                  return;
+                // Show a message about the overlay image
+                alert("Due to browser security restrictions, the image with overlay cannot be displayed directly. You can download the original image and add text using an image editor.");
+                
+                // Create a simple HTML page with instructions
+                const instructionsWindow = window.open('', '_blank');
+                if (instructionsWindow) {
+                  const htmlContent = [
+                    '<!DOCTYPE html>',
+                    '<html>',
+                    '  <head>',
+                    '    <title>Text Overlay Instructions</title>',
+                    '    <style>',
+                    '      body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }',
+                    '      h1 { color: #333; }',
+                    '      .instructions { background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin-bottom: 20px; }',
+                    '      .text-properties { background-color: #e9f7fe; padding: 15px; border-radius: 5px; margin-top: 20px; }',
+                    '      .download-link { display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-top: 20px; }',
+                    '      .download-link:hover { background-color: #45a049; }',
+                    '    </style>',
+                    '  </head>',
+                    '  <body>',
+                    '    <h1>Text Overlay Instructions</h1>',
+                    '    <div class="instructions">',
+                    '      <p>Due to browser security restrictions, we cannot automatically generate the image with text overlay. Here are the text properties you can use to manually add the overlay:</p>',
+                    '      <div class="text-properties">',
+                    '        <h3>Text Properties:</h3>',
+                    '        <ul>',
+                    '          <li><strong>Text:</strong> ' + textOverlay.text + '</li>',
+                    '          <li><strong>Position:</strong> ' + textOverlay.position + '</li>',
+                    '          <li><strong>Font Size:</strong> ' + textOverlay.fontSize + 'px</li>',
+                    '          <li><strong>Color:</strong> <span style="color: ' + textOverlay.color + '">' + textOverlay.color + '</span></li>',
+                    '          <li><strong>Font Family:</strong> ' + textOverlay.fontFamily + '</li>',
+                    '          <li><strong>Font Weight:</strong> ' + textOverlay.fontWeight + '</li>',
+                    '          <li><strong>Text Align:</strong> ' + textOverlay.textAlign + '</li>',
+                    '          <li><strong>Text Shadow:</strong> ' + (textOverlay.textShadow ? 'Yes' : 'No') + '</li>',
+                    '          <li><strong>Background Color:</strong> <span style="color: ' + textOverlay.backgroundColor + '">' + textOverlay.backgroundColor + '</span></li>',
+                    '          <li><strong>Background Opacity:</strong> ' + Math.round(textOverlay.backgroundOpacity * 100) + '%</li>',
+                    '        </ul>',
+                    '      </div>',
+                    '      <p>You can use these properties in an image editor like Photoshop, GIMP, or online tools like Canva to add the text overlay to your image.</p>',
+                    '      <a href="' + generatedAd.imageUrl + '" download="original-ad-' + Date.now() + '.png" class="download-link">Download Original Image</a>',
+                    '    </div>',
+                    '  </body>',
+                    '</html>'
+                  ].join('\n');
+                  
+                  instructionsWindow.document.write(htmlContent);
+                  instructionsWindow.document.close();
                 }
-                
-                // Set canvas dimensions
-                canvas.width = 512;
-                canvas.height = 512;
-                
-                // Fill with white background
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Load the image
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                
-                img.onload = function() {
-                  // Draw the image
-                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                  
-                  // Add text overlay
-                  const text = "${textOverlay.text.replace(/"/g, '\\"')}";
-                  const fontWeight = "${textOverlay.fontWeight}";
-                  const fontSize = ${textOverlay.fontSize};
-                  const fontFamily = "${textOverlay.fontFamily.replace(/"/g, '\\"')}";
-                  const color = "${textOverlay.color}";
-                  const textAlign = "${textOverlay.textAlign}";
-                  const textShadow = ${textOverlay.textShadow};
-                  const position = "${textOverlay.position}";
-                  const backgroundColor = "${textOverlay.backgroundColor}";
-                  const backgroundOpacity = ${textOverlay.backgroundOpacity};
-                  
-                  // Set text properties
-                  ctx.font = fontWeight + ' ' + fontSize + 'px ' + fontFamily;
-                  ctx.fillStyle = color;
-                  ctx.textAlign = textAlign;
-                  
-                  // Add text shadow if enabled
-                  if (textShadow) {
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-                    ctx.shadowBlur = 2;
-                    ctx.shadowOffsetX = 1;
-                    ctx.shadowOffsetY = 1;
-                  }
-                  
-                  // Calculate text position
-                  let y = 0;
-                  if (position === 'top') {
-                    y = fontSize + 20;
-                  } else if (position === 'center') {
-                    y = canvas.height / 2;
-                  } else if (position === 'bottom') {
-                    y = canvas.height - 20;
-                  }
-                  
-                  // Add background for text if needed
-                  if (backgroundColor !== 'transparent' && backgroundOpacity > 0) {
-                    const textWidth = ctx.measureText(text).width;
-                    const textHeight = fontSize;
-                    const padding = 10;
-                    
-                    // Calculate background position based on text alignment
-                    let bgX = 0;
-                    if (textAlign === 'center') {
-                      bgX = canvas.width / 2 - textWidth / 2 - padding;
-                    } else if (textAlign === 'right') {
-                      bgX = canvas.width - textWidth - padding * 2;
-                    }
-                    
-                    // Draw background
-                    const opacityHex = Math.round(backgroundOpacity * 255).toString(16).padStart(2, '0');
-                    ctx.fillStyle = backgroundColor + opacityHex;
-                    ctx.fillRect(
-                      bgX, 
-                      y - textHeight - padding, 
-                      textWidth + padding * 2, 
-                      textHeight + padding * 2
-                    );
-                  }
-                  
-                  // Draw text
-                  const x = textAlign === 'center' ? canvas.width / 2 : 
-                           textAlign === 'right' ? canvas.width - 20 : 20;
-                  ctx.fillText(text, x, y);
-                  
-                  // Open the image with overlay in a new tab
-                  const dataURL = canvas.toDataURL('image/png');
-                  window.open(dataURL, '_blank');
-                };
-                
-                img.onerror = function() {
-                  alert('Failed to load image. Please try again.');
-                };
-                
-                // Set the source to trigger loading
-                img.src = "${generatedAd.imageUrl}";
               }
             </script>
           </body>
