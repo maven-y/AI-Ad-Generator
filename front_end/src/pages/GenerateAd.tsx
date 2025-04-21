@@ -32,7 +32,9 @@ import {
   FormatColorText,
   TextFields,
   Save,
-  Close
+  Close,
+  OpenInNew,
+  Download
 } from '@mui/icons-material';
 import axios from 'axios';
 import { Category, SubCategory, adCategories } from '../types/Category';
@@ -423,7 +425,101 @@ const GenerateAd: React.FC = () => {
 
   const handleOpenInNewTab = () => {
     if (generatedAd?.imageUrl) {
-      window.open(generatedAd.imageUrl, '_blank');
+      // Create a new HTML page with both images
+      const newWindow = window.open('', '_blank');
+      if (newWindow) {
+        newWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Ad Preview</title>
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  margin: 0;
+                  padding: 20px;
+                  background-color: #f5f5f5;
+                }
+                .container {
+                  max-width: 1200px;
+                  margin: 0 auto;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 20px;
+                }
+                .image-container {
+                  display: flex;
+                  flex-wrap: wrap;
+                  gap: 20px;
+                  justify-content: center;
+                }
+                .image-box {
+                  background-color: white;
+                  padding: 15px;
+                  border-radius: 8px;
+                  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                  max-width: 500px;
+                }
+                .image-box h3 {
+                  margin-top: 0;
+                  text-align: center;
+                  color: #333;
+                }
+                img {
+                  max-width: 100%;
+                  height: auto;
+                  display: block;
+                  margin: 0 auto;
+                }
+                .text-overlay {
+                  position: relative;
+                  width: 100%;
+                  height: auto;
+                }
+                .overlay-text {
+                  position: absolute;
+                  width: 100%;
+                  text-align: ${textOverlay.textAlign};
+                  color: ${textOverlay.color};
+                  font-family: ${textOverlay.fontFamily};
+                  font-weight: ${textOverlay.fontWeight};
+                  font-size: ${textOverlay.fontSize}px;
+                  ${textOverlay.textShadow ? 'text-shadow: 1px 1px 2px rgba(0,0,0,0.2);' : ''}
+                  ${textOverlay.position === 'top' ? 'top: 20px;' : ''}
+                  ${textOverlay.position === 'center' ? 'top: 50%; transform: translateY(-50%);' : ''}
+                  ${textOverlay.position === 'bottom' ? 'bottom: 20px;' : ''}
+                  padding: 10px;
+                  ${textOverlay.backgroundColor !== 'transparent' && textOverlay.backgroundOpacity > 0 
+                    ? `background-color: ${textOverlay.backgroundColor}${Math.round(textOverlay.backgroundOpacity * 255).toString(16).padStart(2, '0')};` 
+                    : ''}
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1 style="text-align: center;">Ad Preview</h1>
+                <div class="image-container">
+                  <div class="image-box">
+                    <h3>Original Image</h3>
+                    <img src="${generatedAd.imageUrl}" alt="Original Ad" />
+                  </div>
+                  <div class="image-box">
+                    <h3>Image with Text Overlay</h3>
+                    <div class="text-overlay">
+                      <img src="${generatedAd.imageUrl}" alt="Ad with Overlay" />
+                      ${textOverlay.text ? `<div class="overlay-text">${textOverlay.text}</div>` : ''}
+                    </div>
+                  </div>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                  <p>Generated on: ${new Date().toLocaleString()}</p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `);
+        newWindow.document.close();
+      }
       handleClosePopup();
     }
   };
@@ -432,102 +528,225 @@ const GenerateAd: React.FC = () => {
     if (!generatedAd) return;
 
     try {
-      // Create a container for the image and text overlay
-      const container = document.createElement('div');
-      container.style.width = '512px';
-      container.style.height = '512px';
-      container.style.position = 'relative';
-      container.style.backgroundColor = '#ffffff';
-
-      // Create and style the image
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = generatedAd.imageUrl;
-      });
-
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'cover';
-      img.style.position = 'absolute';
-      img.style.top = '0';
-      img.style.left = '0';
-
-      // Create and style the text overlay
-      const textOverlayDiv = document.createElement('div');
-      textOverlayDiv.style.position = 'absolute';
-      textOverlayDiv.style.width = '100%';
-      textOverlayDiv.style.padding = '16px';
-      textOverlayDiv.style.textAlign = textOverlay.textAlign;
-      textOverlayDiv.style.backgroundColor = `${textOverlay.backgroundColor}${Math.round(textOverlay.backgroundOpacity * 255).toString(16).padStart(2, '0')}`;
-      textOverlayDiv.style.zIndex = '10';
-      textOverlayDiv.style.display = 'flex';
-      textOverlayDiv.style.justifyContent = textOverlay.textAlign === 'center' ? 'center' : 
-                                          textOverlay.textAlign === 'right' ? 'flex-end' : 'flex-start';
-
-      // Position the text overlay
-      if (textOverlay.position === 'top') {
-        textOverlayDiv.style.top = '0';
-      } else if (textOverlay.position === 'center') {
-        textOverlayDiv.style.top = '50%';
-        textOverlayDiv.style.transform = 'translateY(-50%)';
-      } else {
-        textOverlayDiv.style.bottom = '0';
+      // Create a new window with both images
+      const newWindow = window.open('', '_blank');
+      if (!newWindow) {
+        setError('Pop-up blocked. Please allow pop-ups for this site.');
+        return;
       }
 
-      // Create and style the text
-      const text = document.createElement('p');
-      text.textContent = textOverlay.text;
-      text.style.margin = '0';
-      text.style.fontSize = `${textOverlay.fontSize}px`;
-      text.style.color = textOverlay.color;
-      text.style.fontFamily = textOverlay.fontFamily;
-      text.style.fontWeight = textOverlay.fontWeight;
-      text.style.textShadow = textOverlay.textShadow ? '1px 1px 2px rgba(0,0,0,0.2)' : 'none';
-      text.style.whiteSpace = 'pre-wrap';
-      text.style.wordBreak = 'break-word';
+      // Create the HTML content for the new window
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Ad Preview</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                background-color: #f5f5f5;
+              }
+              .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+              }
+              .image-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px;
+                justify-content: center;
+              }
+              .image-box {
+                background-color: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                max-width: 500px;
+              }
+              .image-box h3 {
+                margin-top: 0;
+                text-align: center;
+                color: #333;
+              }
+              img {
+                max-width: 100%;
+                height: auto;
+                display: block;
+                margin: 0 auto;
+              }
+              .text-overlay {
+                position: relative;
+                width: 100%;
+                height: auto;
+              }
+              .overlay-text {
+                position: absolute;
+                width: 100%;
+                text-align: ${textOverlay.textAlign};
+                color: ${textOverlay.color};
+                font-family: ${textOverlay.fontFamily};
+                font-weight: ${textOverlay.fontWeight};
+                font-size: ${textOverlay.fontSize}px;
+                ${textOverlay.textShadow ? 'text-shadow: 1px 1px 2px rgba(0,0,0,0.2);' : ''}
+                ${textOverlay.position === 'top' ? 'top: 20px;' : ''}
+                ${textOverlay.position === 'center' ? 'top: 50%; transform: translateY(-50%);' : ''}
+                ${textOverlay.position === 'bottom' ? 'bottom: 20px;' : ''}
+                padding: 10px;
+                ${textOverlay.backgroundColor !== 'transparent' && textOverlay.backgroundOpacity > 0 
+                  ? `background-color: ${textOverlay.backgroundColor}${Math.round(textOverlay.backgroundOpacity * 255).toString(16).padStart(2, '0')};` 
+                  : ''}
+              }
+              .download-buttons {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                margin-top: 20px;
+              }
+              .download-button {
+                padding: 10px 20px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                text-decoration: none;
+              }
+              .download-button:hover {
+                background-color: #45a049;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1 style="text-align: center;">Ad Preview</h1>
+              <div class="image-container">
+                <div class="image-box">
+                  <h3>Original Image</h3>
+                  <img src="${generatedAd.imageUrl}" alt="Original Ad" />
+                  <div class="download-buttons">
+                    <a href="${generatedAd.imageUrl}" download="original-ad-${Date.now()}.png" class="download-button">Download Original</a>
+                  </div>
+                </div>
+                <div class="image-box">
+                  <h3>Image with Text Overlay</h3>
+                  <div class="text-overlay">
+                    <img src="${generatedAd.imageUrl}" alt="Ad with Text Overlay" />
+                    <div class="overlay-text">${textOverlay.text}</div>
+                  </div>
+                  <div class="download-buttons">
+                    <button onclick="downloadWithOverlay()" class="download-button">Download Image</button>
+                  </div>
+                </div>
+              </div>
+              <p style="text-align: center; color: #666;">Preview generated on ${new Date().toLocaleString()}</p>
+            </div>
+            <script>
+              function downloadWithOverlay() {
+                // Create a canvas element
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                  alert('Could not create canvas context');
+                  return;
+                }
 
-      // Assemble the elements
-      textOverlayDiv.appendChild(text);
-      container.appendChild(img);
-      container.appendChild(textOverlayDiv);
+                // Set canvas dimensions
+                canvas.width = 512;
+                canvas.height = 512;
+                
+                // Fill with white background
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Add the container to the document temporarily
-      document.body.appendChild(container);
+                // Load the image
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                
+                img.onload = function() {
+                  // Draw the image
+                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Use html2canvas to capture the entire container
-      const canvas = await html2canvas(container, {
-        useCORS: true,
-        allowTaint: true,
-        background: '#ffffff',
-        logging: true
-      });
+                  // Add text overlay
+                  ctx.font = '${textOverlay.fontWeight} ${textOverlay.fontSize}px ${textOverlay.fontFamily}';
+                  ctx.fillStyle = '${textOverlay.color}';
+                  ctx.textAlign = '${textOverlay.textAlign}';
+                  
+                  if (${textOverlay.textShadow}) {
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                    ctx.shadowBlur = 2;
+                    ctx.shadowOffsetX = 1;
+                    ctx.shadowOffsetY = 1;
+                  }
 
-      // Remove the temporary container
-      document.body.removeChild(container);
+                  let y = 0;
+                  if ('${textOverlay.position}' === 'top') {
+                    y = ${textOverlay.fontSize} + 20;
+                  } else if ('${textOverlay.position}' === 'center') {
+                    y = canvas.height / 2;
+                  } else if ('${textOverlay.position}' === 'bottom') {
+                    y = canvas.height - 20;
+                  }
 
-      // Convert to blob and download
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          console.error('Failed to create blob from canvas');
-          return;
-        }
+                  if ('${textOverlay.backgroundColor}' !== 'transparent' && ${textOverlay.backgroundOpacity} > 0) {
+                    const textWidth = ctx.measureText('${textOverlay.text}').width;
+                    const textHeight = ${textOverlay.fontSize};
+                    const padding = 10;
+                    
+                    let bgX = 0;
+                    if ('${textOverlay.textAlign}' === 'center') {
+                      bgX = canvas.width / 2 - textWidth / 2 - padding;
+                    } else if ('${textOverlay.textAlign}' === 'right') {
+                      bgX = canvas.width - textWidth - padding * 2;
+                    }
+                    
+                    ctx.fillStyle = '${textOverlay.backgroundColor}${Math.round(textOverlay.backgroundOpacity * 255).toString(16).padStart(2, '0')}';
+                    ctx.fillRect(
+                      bgX, 
+                      y - textHeight - padding, 
+                      textWidth + padding * 2, 
+                      textHeight + padding * 2
+                    );
+                  }
 
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `generated-ad-${Date.now()}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 'image/png', 1.0);
+                  ctx.fillText('${textOverlay.text}', 
+                    '${textOverlay.textAlign}' === 'center' ? canvas.width / 2 : 
+                    '${textOverlay.textAlign}' === 'right' ? canvas.width - 20 : 20, 
+                    y
+                  );
+
+                  // Create download link
+                  const link = document.createElement('a');
+                  link.href = canvas.toDataURL('image/png');
+                  link.download = 'ad-with-text-${Date.now()}.png';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                };
+                
+                img.onerror = function() {
+                  alert('Failed to load image. Please try again.');
+                };
+                
+                // Set the source to trigger loading
+                img.src = '${generatedAd.imageUrl}';
+              }
+            </script>
+          </body>
+        </html>
+      `;
+
+      // Write the HTML content to the new window
+      newWindow.document.write(htmlContent);
+      newWindow.document.close();
+
     } catch (error) {
-      console.error('Error downloading image:', error);
-      setError('Failed to download image. Please try again.');
+      console.error('Error opening preview:', error);
+      setError('Failed to open preview. Please try again.');
     }
   };
 
@@ -1171,14 +1390,16 @@ ${formData.generationPrompt}`}
                 <Typography variant="caption" color="text.secondary">
                   Status: {generatedAd.status}
                 </Typography>
-                <Tooltip title="Save Customized Ad">
-                  <IconButton 
-                    color="primary"
-                    onClick={handleSaveAd}
-                  >
-                    <Save />
-                  </IconButton>
-                </Tooltip>
+                <Box>
+                  <Tooltip title="Save Customized Ad">
+                    <IconButton 
+                      color="primary"
+                      onClick={handleSaveAd}
+                    >
+                      <Save />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               </Box>
             </Paper>
           )}
@@ -1210,13 +1431,22 @@ ${formData.generationPrompt}`}
               />
             )}
           </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
+          <DialogActions sx={{ p: 2, gap: 1 }}>
             <Button onClick={handleClosePopup}>Close</Button>
             <Button
-              variant="contained"
+              variant="outlined"
               onClick={handleOpenInNewTab}
+              startIcon={<OpenInNew />}
             >
               Open in New Tab
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleDownload}
+              startIcon={<Download />}
+              color="primary"
+            >
+              Download Image & Overlay
             </Button>
           </DialogActions>
         </Dialog>
